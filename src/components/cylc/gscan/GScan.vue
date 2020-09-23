@@ -199,7 +199,7 @@ import WorkflowState from '@/model/WorkflowState.model'
 import Job from '@/components/cylc/Job'
 import Tree from '@/components/cylc/tree/Tree'
 import WorkflowIcon from '@/components/cylc/gscan/WorkflowIcon'
-import { createWorkflowNode } from '@/components/cylc/gscan/nodes'
+import { createWorkflowHierarchyFromName } from '@/components/cylc/gscan/nodes'
 import { GSCAN_DELTAS_SUBSCRIPTION } from '@/graphql/queries'
 
 export default {
@@ -329,7 +329,7 @@ export default {
             { numeric: true, sensitivity: 'base' })
       })
         .map(workflow => {
-          return createWorkflowNode(workflow)
+          return createWorkflowHierarchyFromName(workflow)
         })
     }
   },

@@ -14,11 +14,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-import { extractGroupState } from '@/utils/tasks'
-import { mergeWith } from 'lodash'
-import { createFamilyProxyNode, getCyclePointId } from '@/components/cylc/tree/nodes'
 import Vue from 'vue'
+import { mergeWith } from 'lodash'
+import { extractGroupState } from '@/utils/tasks'
 import { mergeWithCustomizer } from '@/components/cylc/common/merge'
+import { createFamilyProxyNode, getCyclePointId } from '@/components/cylc/tree/nodes'
 
 export const FAMILY_ROOT = 'root'
 

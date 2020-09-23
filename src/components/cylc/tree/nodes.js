@@ -343,11 +343,64 @@ function createJobNode (job) {
   }
 }
 
+function createWorkflowHierarchyFromName (workflow) {
+  if (workflow.name.indexOf('/') === -1) {
+    return Object.assign(
+      createWorkflowNode(workflow),
+      {
+        children: null,
+        text: workflow.name
+      })
+  }
+  const parts = workflow.name.split('/')
+  const hierarchyPart = parts.slice(0, parts.length - 1)
+  const workflowPart = parts[parts.length - 1]
+  let workflowHierarchy = null
+  /**
+   * @type {null|{
+   *   text: string,
+   *   type: string,
+   *   children: []
+   * }}
+   */
+  let lastPart = null
+  while (hierarchyPart.length > 0) {
+    const part = {
+      id: `${workflow.id}-${hierarchyPart[0]}`,
+      type: 'workflow-name-part',
+      text: hierarchyPart[0],
+      children: []
+    }
+    if (lastPart === null) {
+      // first part
+      workflowHierarchy = part
+    } else {
+      // otherwise just push down the hierarchy
+      lastPart.children.push(part)
+    }
+    lastPart = part
+    // remove head
+    hierarchyPart.splice(0, 1)
+  }
+  // finally, add the workflow to the end of the hierarchy
+  lastPart.children.push(
+    Object.assign(
+      createWorkflowNode(workflow),
+      {
+        text: workflowPart,
+        children: null
+      }
+    )
+  )
+  return workflowHierarchy
+}
+
 export {
   createWorkflowNode,
   createCyclePointNode,
   createFamilyProxyNode,
   createTaskProxyNode,
   createJobNode,
-  getCyclePointId
+  getCyclePointId,
+  createWorkflowHierarchyFromName
 }
