@@ -22,8 +22,12 @@ fi
 cd "$(dirname "$0")" || exit 1
 CHECK_FILE='checkpoint.js'
 
-cylc reg "one" one
-if cylc run "one" --fcp=20000102T0000Z --no-detach; then
+# Using cylc install results in get_checkpoint.py not being found by the
+# task. We can either copy it when installing
+cylc install --no-run-name --flow-name="one" --directory=one
+# ln -s "${PWD}/one/" "${HOME}/cylc-run/one"
+
+if cylc play "one" --fcp=20000102T0000Z --no-detach; then
     cp \
         "${HOME}/cylc-run/one/work/20000102T0000Z/checkpoint/checkpoint" \
         "${CHECK_FILE}"

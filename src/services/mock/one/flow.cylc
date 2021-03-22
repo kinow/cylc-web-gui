@@ -18,17 +18,17 @@
         A simple suite which demonstrates tasks in different states.
     """
 
-[cylc]
+[scheduler]
     UTC mode = True
+    allow implicit tasks = True
 
 [scheduling]
     initial cycle point = 2000
     [[dependencies]]
-        [[[P1D]]]
-            graph = """
+        P1D = """
                 sleepy[-P1D] & waiting[-P1D] =>
                 SUCCEEDED:succeed-all & retrying
-                SUCCEEDED:succeed-all => failed
+                succeeded & retrying:fail => failed
                 failed:fail => checkpoint => sleepy & waiting
                 sleepy => !failed
             """
@@ -56,8 +56,7 @@
                 false
             fi
         """
-        [[[job]]]
-            execution retry delays = 4*PT1S
+        execution retry delays = 4*PT1S
         [[[meta]]]
             description = """
                 Will succeed, after a few false starts.
@@ -70,8 +69,7 @@
         script = """
             false
         """
-        [[[job]]]
-            execution retry delays = PT5M
+        execution retry delays = PT5M
         [[[meta]]]
             description = """
                 Fails then sits in the retrying state for ages.
@@ -84,17 +82,14 @@
         """
 
     [[checkpoint]]
-        inherit = root
+        inherit = SUCCEEDED
         script = """
-            # allow workflow's state to settle
-            sleep 5
-
             # take a checkpoint
-            CHECK="${CYLC_SUITE_DEF_PATH}/../checkpoint/get_checkpoint.py"
+            CHECK="get_checkpoint.py"
             cylc client \
                 "${CYLC_SUITE_NAME}" \
                 graphql \
-                <<< "$(python3 "${CHECK}")" \
+                <<< "$("${CHECK}")" \
                 > checkpoint
 
             # reset stuff
