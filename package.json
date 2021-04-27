@@ -106,6 +106,7 @@
     "vue-cli-plugin-vuetify": "^2.4.0",
     "vue-cli-plugin-vuetify-essentials": "^0.8.3",
     "vue-template-compiler": "^2.6.12",
+    "vuepress": "^1.8.2",
     "vuetify-loader": "^1.7.2",
     "webpack": "^4.46.0",
     "zen-observable": "^0.8.15"
