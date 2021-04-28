@@ -1,4 +1,5 @@
 const path = require('path')
+const VuetifyLoaderPlugin = require('vuetify-loader/lib/plugin')
 
 module.exports = {
   plugins: [
@@ -11,6 +12,11 @@ module.exports = {
         codesandbox: false,
       }
     }]
+  ],
+
+  transpileDependencies: [
+    'markdown-it',
+    'vuetify'
   ],
 
   locales: {
@@ -51,6 +57,7 @@ module.exports = {
               collapsable: false,
               children: [
                 'job',
+                'menu',
                 'task'
               ]
             }
@@ -64,6 +71,33 @@ module.exports = {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '../../src/')
+      }
+    }
+  },
+
+  chainWebpack (config) {
+
+    // overwrite loader options
+    for (const lang of ["sass", "scss"]) {
+      for (const name of ["modules", "normal"]) {
+        const rule = config.module.rule(lang).oneOf(name);
+        rule.uses.delete("sass-loader");
+        const end = lang === 'sass' ? "'" : "';"
+
+        rule
+          .use("sass-loader")
+          .loader("sass-loader")
+          .options({
+            implementation: require("sass"),
+            sassOptions: {
+              indentedSyntax: lang === "sass"
+            },
+            // here I needed to add a global variables files which also imports ~vuetify/src/styles/styles.sass inside,
+            // for overwriting Vuetify framework variables
+            // additionalData: `
+            //     @import '~@/styles/index.scss${end}
+            // `
+          });
       }
     }
   }
