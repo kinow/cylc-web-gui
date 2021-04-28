@@ -5,7 +5,6 @@ module.exports = {
     ['demo-code', {
       showText: 'show code',
       hideText: 'hide',
-      minHeight: 0,
       onlineBtns: {
         codepen: false,
         jsfiddle: false,
@@ -54,7 +53,8 @@ module.exports = {
               title: 'Components',
               collapsable: false,
               children: [
-                'job'
+                'job',
+                'task'
               ]
             }
           ]
