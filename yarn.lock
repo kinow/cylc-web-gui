@@ -4397,6 +4397,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"binaryextensions@npm:^2.1.2":
+  version: 2.3.0
+  resolution: "binaryextensions@npm:2.3.0"
+  checksum: e64e4658a611a753e0320b047a0045a063c6f2dd92d7a7fc06c25f7e72fb3700dabcf328e319c79f1038e6d0ea46edb0644686603d5f36bff3350d0e7eb198a9
+  languageName: node
+  linkType: hard
+
 "bindings@npm:^1.5.0":
   version: 1.5.0
   resolution: "bindings@npm:1.5.0"
@@ -5668,6 +5675,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"codesandbox-import-util-types@npm:^2.3.0":
+  version: 2.3.0
+  resolution: "codesandbox-import-util-types@npm:2.3.0"
+  checksum: e527fe1a0bc2de5a0a9842a70d42ad4c6de56a99a4a9e1427a81f4006ab91d85ff098e2e919cccbcd8703f9b3216b9c1f4ce5a40261051d8d1511287fbbf7d77
+  languageName: node
+  linkType: hard
+
+"codesandbox-import-utils@npm:^2.1.16":
+  version: 2.3.0
+  resolution: "codesandbox-import-utils@npm:2.3.0"
+  dependencies:
+    codesandbox-import-util-types: ^2.3.0
+    istextorbinary: ^2.2.1
+    lz-string: ^1.4.4
+  checksum: 977edf0d95706bf02e0b850679efb84ab04fa2d92d05faf183626fa996e2ff0c9f1350d69b0a8cf11c519f3edf15266f1109402810d0e6219b08a0b0589b072d
+  languageName: node
+  linkType: hard
+
 "coffeeify@npm:3.0.1":
   version: 3.0.1
   resolution: "coffeeify@npm:3.0.1"
@@ -6881,6 +6906,7 @@ __metadata:
     vue-template-compiler: ^2.6.12
     vue-the-mask: ^0.11.1
     vuepress: ^1.8.2
+    vuepress-plugin-demo-code: ^0.5.2
     vuetify: ^2.4.11
     vuetify-loader: ^1.7.2
     vuex: ^3.6.2
@@ -7759,6 +7785,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"editions@npm:^2.2.0":
+  version: 2.3.1
+  resolution: "editions@npm:2.3.1"
+  dependencies:
+    errlop: ^2.0.0
+    semver: ^6.3.0
+  checksum: 0b08a2b50c30e7b046a3096ee66ea326158a147daac5f8c134b4bdfe4d2fe02f9916c8b92d8e86887f2379c3528df2150cc9eb3d5bc25c442b4b380d6d7a754e
+  languageName: node
+  linkType: hard
+
 "editorconfig@npm:^0.15.3":
   version: 0.15.3
   resolution: "editorconfig@npm:0.15.3"
@@ -7963,6 +7999,13 @@ __metadata:
   version: 2.0.3
   resolution: "err-code@npm:2.0.3"
   checksum: 8b7b1be20d2de12d2255c0bc2ca638b7af5171142693299416e6a9339bd7d88fc8d7707d913d78e0993176005405a236b066b45666b27b797252c771156ace54
+  languageName: node
+  linkType: hard
+
+"errlop@npm:^2.0.0":
+  version: 2.2.0
+  resolution: "errlop@npm:2.2.0"
+  checksum: 9bce5eba67866b168cfbc98de46df4d7ad7a8e75fb12a40ade886d801dbe4c9d5d640a0bb6a41552a47aeda00c26db97182732213d7d523439e10dc6a853bd7d
   languageName: node
   linkType: hard
 
@@ -11907,6 +11950,17 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
+"istextorbinary@npm:^2.2.1":
+  version: 2.6.0
+  resolution: "istextorbinary@npm:2.6.0"
+  dependencies:
+    binaryextensions: ^2.1.2
+    editions: ^2.2.0
+    textextensions: ^2.5.0
+  checksum: 964915aa9533df46a7142d36263e9e1a0940d63b58e2ee1ca1ecc9088239a2499b8153d9746225cfe71b9a7a0ab40565bf23c0a8cfed3a4bce7465303b9fb237
+  languageName: node
+  linkType: hard
+
 "iterall@npm:^1.2.1":
   version: 1.3.0
   resolution: "iterall@npm:1.3.0"
@@ -13016,6 +13070,15 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
+"lz-string@npm:^1.4.4":
+  version: 1.4.4
+  resolution: "lz-string@npm:1.4.4"
+  bin:
+    lz-string: bin/bin.js
+  checksum: 54e31238a61a84d8f664d9860a9fba7310c5b97a52c444f80543069bc084815eff40b8d4474ae1d93992fdf6c252dca37cf27f6adbeb4dbc3df2f3ac773d0e61
+  languageName: node
+  linkType: hard
+
 "macos-release@npm:^2.2.0":
   version: 2.4.1
   resolution: "macos-release@npm:2.4.1"
@@ -13126,6 +13189,13 @@ fsevents@~2.3.1:
   version: 2.0.0
   resolution: "markdown-it-container@npm:2.0.0"
   checksum: 3f3f3da5a72fc3e885d349da4ea7209b8fab89fa5d95b1866ed8a01a14322f6c87c6c224d67c3d59237f9331d494b8dea6aaba94c1721abc8210af23ee462cd7
+  languageName: node
+  linkType: hard
+
+"markdown-it-container@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "markdown-it-container@npm:3.0.0"
+  checksum: 8638a2f7587afe0c7c725558599d541fac46f8578b7ba2a7d305d87db8549d07edfb89c59147d0d17ffa189c8d39eff3f16a80613ec7aaf92af8ead713292693
   languageName: node
   linkType: hard
 
@@ -16065,7 +16135,7 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
-"prismjs@npm:^1.13.0":
+"prismjs@npm:^1.13.0, prismjs@npm:^1.20.0":
   version: 1.23.0
   resolution: "prismjs@npm:1.23.0"
   dependencies:
@@ -18787,6 +18857,13 @@ resolve@1.1.7:
   languageName: node
   linkType: hard
 
+"textextensions@npm:^2.5.0":
+  version: 2.6.0
+  resolution: "textextensions@npm:2.6.0"
+  checksum: e28781f092d0172b78974fd22d5c007cc43ac50be666b36bbf10125d961775faf309a70b51697a2debc074c8f23cc923f1386b1e4661e11b128cee292060034c
+  languageName: node
+  linkType: hard
+
 "thenify-all@npm:^1.0.0":
   version: 1.6.0
   resolution: "thenify-all@npm:1.6.0"
@@ -20025,6 +20102,13 @@ resolve@1.1.7:
   languageName: node
   linkType: hard
 
+"vuepress-plugin-code-copy@npm:^1.0.6":
+  version: 1.0.6
+  resolution: "vuepress-plugin-code-copy@npm:1.0.6"
+  checksum: ff20536e2da206b3c42f3dc4193d228fb4aaede0b88f7700612599e85e57748e7dd584fa1e651d8e5664aa9845db95c2ce90a4a9cbf569d67c6b921e43d61e55
+  languageName: node
+  linkType: hard
+
 "vuepress-plugin-container@npm:^2.0.2":
   version: 2.1.5
   resolution: "vuepress-plugin-container@npm:2.1.5"
@@ -20032,6 +20116,18 @@ resolve@1.1.7:
     "@vuepress/shared-utils": ^1.2.0
     markdown-it-container: ^2.0.0
   checksum: 49a9e088ad7268fbf1a52cd152da2755c59bfa1e65f9c1c5f34c642847aae64f23f4f9727f244b30521a866496ae95dcfc6d4d62e4031469e02f96b4386bb165
+  languageName: node
+  linkType: hard
+
+"vuepress-plugin-demo-code@npm:^0.5.2":
+  version: 0.5.2
+  resolution: "vuepress-plugin-demo-code@npm:0.5.2"
+  dependencies:
+    codesandbox-import-utils: ^2.1.16
+    markdown-it-container: ^3.0.0
+    prismjs: ^1.20.0
+    vuepress-plugin-code-copy: ^1.0.6
+  checksum: 2669a3da86f7c0cb0536e092b277d8198dcb55fb4bbe6ff4881b8904348a1b0f643ff05894bf9c81c74be1bf2687a4f5d752107999fc7752f0a81c90fde00675
   languageName: node
   linkType: hard
 

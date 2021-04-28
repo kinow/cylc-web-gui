@@ -1,4 +1,19 @@
+const path = require('path')
+
 module.exports = {
+  plugins: [
+    ['demo-code', {
+      showText: 'show code',
+      hideText: 'hide',
+      minHeight: 0,
+      onlineBtns: {
+        codepen: false,
+        jsfiddle: false,
+        codesandbox: false,
+      }
+    }]
+  ],
+
   locales: {
     '/': {
       lang: 'en-US',
@@ -49,7 +64,7 @@ module.exports = {
   configureWebpack: {
     resolve: {
       alias: {
-        '@': '../../src'
+        '@': path.resolve(__dirname, '../../src/')
       }
     }
   }
