@@ -53,7 +53,9 @@ module.exports = {
             {
               title: 'Components',
               collapsable: false,
-              children: ['job-component']
+              children: [
+                'job'
+              ]
             }
           ]
         }

@@ -1,4 +1,4 @@
-# Job component
+# Job
 
 The job status icon implemented as an inline-block level object
 which can sit in text.
