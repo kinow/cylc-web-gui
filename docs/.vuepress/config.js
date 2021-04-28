@@ -16,7 +16,7 @@ module.exports = {
   locales: {
     '/': {
       lang: 'en-US',
-      title: 'Cylc UI Components'
+      title: 'Cylc UI'
     }
   },
 
@@ -42,10 +42,7 @@ module.exports = {
           }
         },
         nav: [
-          { text: 'Getting Started', link: '/guide' },
           { text: 'Components', link: '/components/' },
-          // external link to git repo...again
-          { text: 'GitHub', link: 'https://github.com/cylc/cylc-ui/' }
         ],
         sidebar: {
           '/components/': [
