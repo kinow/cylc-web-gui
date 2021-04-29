@@ -77,6 +77,16 @@ export default [
     props: true
   },
   {
+    path: '/table/:workflowName(.*)',
+    view: 'Table',
+    name: 'table',
+    meta: {
+      layout: 'default',
+      toolbar: true
+    },
+    props: true
+  },
+  {
     path: '/guide',
     name: 'Guide',
     view: 'Guide',

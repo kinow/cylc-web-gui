@@ -111,85 +111,8 @@ fragment JobData on Job {
 `
 
 /**
- * @type {DocumentNode}
- */
-const WORKFLOW_TREE_DELTAS_SUBSCRIPTION = gql`
-subscription OnWorkflowTreeDeltasData ($workflowId: ID) {
-  deltas (workflows: [$workflowId], stripNull: true) {
-   ...WorkflowTreeDeltas
-  }
-}
-
-# TREE DELTAS BEGIN
-
-fragment WorkflowTreeDeltas on Deltas {
-  id
-  added {
-    ...WorkflowTreeAddedData
-  }
-  updated {
-    ...WorkflowTreeUpdatedData
-  }
-  pruned {
-    ...WorkflowTreePrunedData
-  }
-}
-
-fragment WorkflowTreeAddedData on Added {
-  workflow {
-    ...WorkflowData
-  }
-  cyclePoints: familyProxies (ids: ["root"], ghosts: true) {
-    ...CyclePointData
-  }
-  familyProxies (exids: ["root"], sort: { keys: ["name"] }, ghosts: true) {
-    ...FamilyProxyData
-  }
-  taskProxies (sort: { keys: ["cyclePoint"], reverse: false }, ghosts: true) {
-    ...TaskProxyData
-  }
-  jobs (sort: { keys: ["submit_num"], reverse:true }) {
-    ...JobData
-  }
-}
-
-fragment WorkflowTreeUpdatedData on Updated {
-  taskProxies (ghosts: true) {
-    ...TaskProxyData
-  }
-  jobs {
-    ...JobData
-  }
-  familyProxies (exids: ["root"], ghosts: true) {
-    ...FamilyProxyData
-  }
-}
-
-fragment WorkflowTreePrunedData on Pruned {
-  jobs
-  taskProxies
-  familyProxies
-}
-
-# TREE DELTAS END
-
-# WORKFLOW DATA BEGIN
-
-${WORKFLOW_DATA_FRAGMENT}
-
-${CYCLEPOINT_DATA_FRAGMENT}
-
-${FAMILY_PROXY_DATA_FRAGMENT}
-
-${TASK_PROXY_DATA_FRAGMENT}
-
-${JOB_DATA_FRAGMENT}
-
-# WORKFLOW DATA END
-`
-
-/**
- * Query used to retrieve data for the GScan sidebar.
+ * Query used to retrieve data for the GScan component.
+ *
  * @type {DocumentNode}
  */
 const GSCAN_DELTAS_SUBSCRIPTION = gql`
@@ -288,9 +211,155 @@ subscription WorkflowsTableQuery {
 ${WORKFLOW_DATA_FRAGMENT}
 `
 
+/**
+ * Query used to retrieve data for the table view.
+ *
+ * @type {DocumentNode}
+ */
+const WORKFLOW_TABLE_DELTAS_SUBSCRIPTION = gql`
+subscription OnWorkflowDeltasData($workflowId: ID) {
+  deltas(workflows: [$workflowId], stripNull: true) {
+    ...WorkflowTableDeltas
+  }
+}
+
+# TABLE DELTAS BEGIN
+
+fragment WorkflowTableDeltas on Deltas {
+  id
+  added {
+    ...WorkflowTableAddedData
+  }
+  updated {
+    ...WorkflowTableUpdatedData
+  }
+  pruned {
+    ...WorkflowTablePrunedData
+  }
+}
+
+fragment WorkflowTableAddedData on Added {
+  workflow {
+    ...WorkflowData
+  }
+  taskProxies(sort: {keys: ["name"], reverse: false}, ghosts: true) {
+    ...TaskProxyData
+    jobs(sort: {keys: ["submit_num"], reverse: true}) {
+    ...JobData
+    }
+  }
+}
+
+fragment WorkflowTableUpdatedData on Updated {
+  taskProxies(ghosts: true) {
+    ...TaskProxyData
+    jobs {
+     ...JobData
+    }
+  }
+}
+
+fragment WorkflowTablePrunedData on Pruned {
+  taskProxies
+}
+
+# TABLE DELTAS END
+
+# WORKFLOW DATA BEGINS
+
+${WORKFLOW_DATA_FRAGMENT}
+
+${TASK_PROXY_DATA_FRAGMENT}
+
+${JOB_DATA_FRAGMENT}
+
+# WORKFLOW DATA END
+`
+
+/**
+ * Query used to retrieve data for the tree view.
+ *
+ * @type {DocumentNode}
+ */
+const WORKFLOW_TREE_DELTAS_SUBSCRIPTION = gql`
+subscription OnWorkflowTreeDeltasData ($workflowId: ID) {
+  deltas (workflows: [$workflowId], stripNull: true) {
+   ...WorkflowTreeDeltas
+  }
+}
+
+# TREE DELTAS BEGIN
+
+fragment WorkflowTreeDeltas on Deltas {
+  id
+  added {
+    ...WorkflowTreeAddedData
+  }
+  updated {
+    ...WorkflowTreeUpdatedData
+  }
+  pruned {
+    ...WorkflowTreePrunedData
+  }
+}
+
+fragment WorkflowTreeAddedData on Added {
+  workflow {
+    ...WorkflowData
+  }
+  cyclePoints: familyProxies (ids: ["root"], ghosts: true) {
+    ...CyclePointData
+  }
+  familyProxies (exids: ["root"], sort: { keys: ["name"] }, ghosts: true) {
+    ...FamilyProxyData
+  }
+  taskProxies (sort: { keys: ["cyclePoint"], reverse: false }, ghosts: true) {
+    ...TaskProxyData
+  }
+  jobs (sort: { keys: ["submit_num"], reverse:true }) {
+    ...JobData
+  }
+}
+
+fragment WorkflowTreeUpdatedData on Updated {
+  taskProxies (ghosts: true) {
+    ...TaskProxyData
+  }
+  jobs {
+    ...JobData
+  }
+  familyProxies (exids: ["root"], ghosts: true) {
+    ...FamilyProxyData
+  }
+}
+
+fragment WorkflowTreePrunedData on Pruned {
+  jobs
+  taskProxies
+  familyProxies
+}
+
+# TREE DELTAS END
+
+# WORKFLOW DATA BEGIN
+
+${WORKFLOW_DATA_FRAGMENT}
+
+${CYCLEPOINT_DATA_FRAGMENT}
+
+${FAMILY_PROXY_DATA_FRAGMENT}
+
+${TASK_PROXY_DATA_FRAGMENT}
+
+${JOB_DATA_FRAGMENT}
+
+# WORKFLOW DATA END
+`
+
 export {
-  WORKFLOW_TREE_DELTAS_SUBSCRIPTION,
   GSCAN_DELTAS_SUBSCRIPTION,
   DASHBOARD_DELTAS_SUBSCRIPTION,
-  WORKFLOWS_TABLE_DELTAS_SUBSCRIPTION
+  WORKFLOWS_TABLE_DELTAS_SUBSCRIPTION,
+  WORKFLOW_TREE_DELTAS_SUBSCRIPTION,
+  WORKFLOW_TABLE_DELTAS_SUBSCRIPTION
 }

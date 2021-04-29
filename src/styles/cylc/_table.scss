@@ -1,0 +1,135 @@
+/**
+ * Copyright (C) NIWA & British Crown (Met Office) & Contributors.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+@import '../../../node_modules/vuetify/src/styles/styles';
+
+$active-color: #BDD5F7;
+/**
+ * Height of each line/row in the table. Same as saying “each node in the table has
+ * $line-height height”.
+ */
+$line-height: 1.8em;
+/**
+ * The number of visible outputs in the job info box, under the “outputs” header.
+ * This value is used with $line-height to calculate the maximum height of the
+ * outputs container. Change this value to 10, and you will have 10 visible outputs
+ * in the job info, the remaining outputs being accessible through a scroll.
+ */
+$visible-outputs: 5;
+
+@mixin active-state() {
+  background-color: $active-color;
+  &:hover {
+    background-color: $active-color;
+  }
+}
+
+@mixin states() {
+  &:hover {
+    background-color: map-get($grey, 'lighten-3');
+  }
+}
+
+.tableitem {
+  display:inline-block;
+  vertical-align:middle;
+  width: 100%;
+  .node {
+    line-height: $line-height;
+    display: block;
+
+    .node-expand-collapse-button {
+      float: left;
+      margin-right: 4px;
+    }
+
+    &--hoverable {
+      @include states()
+    }
+
+    &--active {
+      @include active-state()
+    }
+
+    .node-data {
+      margin-left: 6px;
+      display: flex;
+      flex-wrap: nowrap;
+      .node-summary {
+        display: flex;
+        flex-wrap: nowrap;
+        flex-direction: row;
+      }
+    }
+
+    .c-task {
+      font-size: 1.2em;
+    }
+  }
+  .type {
+    margin-right: 10px;
+  }
+
+  $arrow-size: 15px;
+  $leaf-background-color: map-get($grey, 'lighten-3');
+
+  .leaf {
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: nowrap;
+    flex-direction: column;
+    flex-grow: 1;
+    .arrow-up {
+      width: 0;
+      height: 0;
+      border-left: $arrow-size solid transparent;
+      border-right: $arrow-size solid transparent;
+      border-bottom: $arrow-size solid $leaf-background-color;
+      display: flex;
+      flex-wrap: nowrap;
+    }
+    .leaf-data {
+      display: flex;
+      flex-wrap: nowrap;
+      flex-direction: column;
+      background-color: $leaf-background-color;
+      .leaf-entry {
+        display: flex;
+        flex-wrap: nowrap;
+        .leaf-entry-title {
+          // This is the minimum width of the left part in a leaf entry, with the title
+          // ATW the longest text is "latest message". This may need some tweaking. It
+          // would be much simpler if we could rely on flex+row, but we have to create
+          // two elements, and use a v-for with Vue. The v-for element creates an extra
+          // wrapper that stops us of being able to use a single parent with display: flex
+          min-width: 150px;
+        }
+        .leaf-entry-value {
+          white-space: nowrap;
+        }
+      }
+      .leaf-outputs-entry {
+        // 5 outputs, plus a buffer of 1.0em that appears to give the scroll just the
+        // right space to show the N items in the scroll (without the buffer the last
+        // item is partially hidden).
+        max-height: calc(#{$line-height} * #{$visible-outputs} + 1.0em);
+        overflow-y: scroll;
+      }
+    }
+  }
+}

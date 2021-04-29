@@ -58,12 +58,13 @@ export default {
        * want to display the default Toolbar—the Workflow view
        * has its own Toolbar that communicates with the Workflow
        * component (e.g. the Workflow Toolbar owns a button that
-       * triggers the action to add a new Tree View, so the events
+       * triggers the action to add a new Tree or Table View, so the events
        * are passed down from the parent Workflow View).
        */
       workflowViews: [
         'workflow',
-        'tree'
+        'tree',
+        'table'
       ]
     }
   },
