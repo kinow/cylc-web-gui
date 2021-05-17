@@ -18,7 +18,6 @@
 import { mapActions, mapState } from 'vuex'
 /* eslint-disable no-unused-vars */
 import User from '@/model/User.model'
-/* eslint-enable no-unused-vars */
 
 const datatable = {
   computed: {
@@ -46,13 +45,6 @@ const datatable = {
       return {
         workflowId: this.workflowId
       }
-    },
-    /**
-     * Return the workflow hierarchical table.
-     * @return {Array} workflow table
-     */
-    workflowTable () {
-      return this.table ? this.table.root.children : []
     }
   },
 

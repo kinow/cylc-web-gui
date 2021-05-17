@@ -21,10 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     <div class="c-table">
       <table-component
         :tasks="tasks"
-        :hoverable="false"
-        :activable="false"
-        :multiple-active="false"
-        :min-depth="1"
+       props :min-depth="1"
         ref="table0"
         key="table0"
       ></table-component>
@@ -46,32 +43,25 @@ import Vue from 'vue'
 * @param {DeltasAdded} data
 * @param {Array} array
 */
-const applyTableDeltas = (data, array) => {
+export const applyTableDeltas = (data, array) => {
   const added = data.added
   const pruned = data.pruned
   const updated = data.updated
-  if (added) {
-    if (added.taskProxies) {
-      for (const taskProxy of added.taskProxies) {
-        array.push(taskProxy)
-      }
+  if (added && added.taskProxies) {
+    for (const taskProxy of added.taskProxies) {
+      array.push(taskProxy)
     }
   }
-  if (pruned) {
-    if (pruned.taskProxies) {
-      for (const taskProxy of pruned.taskProxies) {
-        const indexToRemove = array.findIndex(task => task.id === taskProxy.id)
-        array.splice(indexToRemove, 1)
-      }
+  if (pruned && pruned.taskProxies) {
+    for (const taskProxy of pruned.taskProxies) {
+      const indexToRemove = array.findIndex(task => task.id === taskProxy.id)
+      array.splice(indexToRemove, 1)
     }
   }
-  if (updated) {
-    if (updated.taskProxies) {
-      for (const taskProxy of updated.taskProxies) {
-        // const indexToUpdate = array.findIndex(task => task.id === taskProxy)
-        const existingTask = array.find(task => task.id === taskProxy.id)
-        mergeWith(existingTask, taskProxy, mergeWithCustomizer)
-      }
+  if (updated && updated.taskProxies) {
+    for (const taskProxy of updated.taskProxies) {
+      const existingTask = array.find(task => task.id === taskProxy.id)
+      mergeWith(existingTask, taskProxy, mergeWithCustomizer)
     }
   }
 }
@@ -118,12 +108,6 @@ export default {
   },
 
   data: () => ({
-    /**
-     * This is the CylcTable, which contains the hierarchical table data structure.
-     * It is created from the GraphQL data, with the only difference that this one
-     * contains hierarchy, while the GraphQL is flat-ish.
-     * @type {Array}
-     */
     tasks: []
   }),
 

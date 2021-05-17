@@ -58,6 +58,7 @@ import Lumino from '@/components/cylc/workflow/Lumino'
 import Toolbar from '@/components/cylc/workflow/Toolbar'
 import CylcObjectMenu from '@/components/cylc/cylcObject/Menu'
 import MutationsView from '@/views/Mutations'
+import TableView from '@/views/Table'
 import TreeView from '@/views/Tree'
 import { mapState } from 'vuex'
 
@@ -96,6 +97,7 @@ export default {
      */
     views: [
       TreeView,
+      TableView,
       MutationsView
     ]
   }),
