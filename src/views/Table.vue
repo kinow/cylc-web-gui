@@ -36,51 +36,8 @@ import TableComponent from '@/components/cylc/table/Table'
 import { WORKFLOW_TABLE_DELTAS_SUBSCRIPTION } from '@/graphql/queries'
 import Alert from '@/model/Alert.model'
 import CylcObjectMenu from '@/components/cylc/cylcObject/Menu'
-import { mergeWith } from 'lodash'
-import Vue from 'vue'
+import { applyTableDeltas } from '@/components/cylc/table/deltas'
 
-/**
-* @param {Deltas} data
-* @param {Array} array
-*/
-export const applyTableDeltas = (deltas, array) => {
-  const added = deltas.added
-  const pruned = deltas.pruned
-  const updated = deltas.updated
-  if (added && added.taskProxies) {
-    for (const taskProxy of added.taskProxies) {
-      array.push(taskProxy)
-    }
-  }
-  if (pruned && pruned.taskProxies) {
-    for (const taskProxy of pruned.taskProxies) {
-      const indexToRemove = array.findIndex(task => task.id === taskProxy.id)
-      array.splice(indexToRemove, 1)
-    }
-  }
-  if (updated && updated.taskProxies) {
-    for (const taskProxy of updated.taskProxies) {
-      const existingTask = array.find(task => task.id === taskProxy.id)
-      mergeWith(existingTask, taskProxy, mergeWithCustomizer)
-    }
-  }
-}
-function mergeWithCustomizer (objValue, srcValue, key, object, source) {
-  if (srcValue !== undefined) {
-    // 1. object[key], or objValue, is undefined
-    //    meaning the destination object does not have the property
-    //    so let's add it with reactivity!
-    if (objValue === undefined) {
-      Vue.set(object, `${key}`, srcValue)
-    }
-    // 2. object[key], or objValue, is defined but without reactivity
-    //    this means somehow the object got a new property that is not reactive
-    //    so let's now make it reactive with the new value!
-    if (object[key] && !object[key].__ob__) {
-      Vue.set(object, `${key}`, srcValue)
-    }
-  }
-}
 export default {
   mixins: [
     mixin,
