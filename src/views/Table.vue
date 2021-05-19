@@ -40,7 +40,7 @@ import { mergeWith } from 'lodash'
 import Vue from 'vue'
 
 /**
-* @param {DeltasAdded} data
+* @param {Deltas} data
 * @param {Array} array
 */
 export const applyTableDeltas = (deltas, array) => {
