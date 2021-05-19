@@ -98,36 +98,36 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         </v-row>
       </v-col>
     </v-row>
-    <table layout="auto" width="100%" padding="1px" border="1px solid black">
-      <thead>
-      <tr align="left">
-<!--        <th>Test</th>-->
-        <th>Task</th>
-        <th>Cyclepoint</th>
-        <th>Host</th>
-        <th>Job System</th>
-        <th>Job ID</th>
-        <th>T-submit</th>
-        <th>T-start</th>
-        <th>T-finish</th>
-        <th>dT-mean</th>
-      </tr>
-      </thead>
-      <tr
-          v-for="task of this.tasks"
-          :key="task.id"
-          >
-        <td><div style="white-space: nowrap"><Task :status="task.state" />  <Job :status="getTaskJobProps(task, 'state')" /> {{ task.name }}</div></td>
-        <td>{{ task.cyclePoint }}</td>
-        <td>{{ getTaskJobProps(task, 'platform') }}</td>
-        <td>{{ getTaskJobProps(task, 'jobRunnerName') }}</td>
-        <td>{{ getTaskJobProps(task, 'jobId') }}</td>
-        <td>{{ getTaskJobProps(task, 'submittedTime') }}</td>
-        <td>{{ getTaskJobProps(task, 'startedTime') }}</td>
-        <td>{{ getTaskJobProps(task, 'finishedTime') }}</td>
-        <td>{{ task.meanElapsedTime }}</td>
-      </tr>
-    </table>
+    <v-data-table
+        :headers="headers"
+        :items="tasks"
+    >
+      <template
+        slot="headerCell"
+        slot-scope="{ header }"
+      >
+        <span
+            class="subheading font-weight-light text-success text--darken-3"
+            v-text="header.text"
+          />
+      </template>
+      <template
+          slot="item"
+          slot-scope="{ item }"
+        >
+        <tr>
+          <td><div style="white-space: nowrap"><Task v-cylc-object="item.id" :status="item.state" />  <Job :status="getTaskJobProps(item, 'state')" /> {{ item.name }}</div></td>
+          <td>{{ item.cyclePoint }}</td>
+          <td>{{ getTaskJobProps(item, 'platform') }}</td>
+          <td>{{ getTaskJobProps(item, 'jobRunnerName') }}</td>
+          <td>{{ getTaskJobProps(item, 'jobId') }}</td>
+          <td>{{ getTaskJobProps(item, 'submittedTime') }}</td>
+          <td>{{ getTaskJobProps(item, 'startedTime') }}</td>
+          <td>{{ getTaskJobProps(item, 'finishedTime') }}</td>
+          <td>{{ item.meanElapsedTime }}</td>
+        </tr>
+      </template>
+    </v-data-table>
   </v-container>
 </template>
 
@@ -155,6 +155,35 @@ export default {
   },
   data () {
     return {
+      headers: [
+        {
+          text: 'Task'
+        },
+        {
+          text: 'Cycle Point'
+        },
+        {
+          text: 'Host'
+        },
+        {
+          text: 'Job System'
+        },
+        {
+          text: 'Job ID'
+        },
+        {
+          text: 'T-submit'
+        },
+        {
+          text: 'T-start'
+        },
+        {
+          text: 'T-finish'
+        },
+        {
+          text: 'dT-mean'
+        }
+      ],
       tasksFilter: {
         name: '',
         states: []

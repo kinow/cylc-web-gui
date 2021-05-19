@@ -43,10 +43,10 @@ import Vue from 'vue'
 * @param {DeltasAdded} data
 * @param {Array} array
 */
-export const applyTableDeltas = (data, array) => {
-  const added = data.added
-  const pruned = data.pruned
-  const updated = data.updated
+export const applyTableDeltas = (deltas, array) => {
+  const added = deltas.added
+  const pruned = deltas.pruned
+  const updated = deltas.updated
   if (added && added.taskProxies) {
     for (const taskProxy of added.taskProxies) {
       array.push(taskProxy)
