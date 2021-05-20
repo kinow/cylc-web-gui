@@ -17,30 +17,66 @@
 
 import { mergeWith } from 'lodash'
 import { mergeWithCustomizer } from '@/utils/merge'
+import Vue from 'vue'
 
 /**
  * @param {Deltas} data
- * @param {Array} array
+ * @param {Object} tasks
  */
-export const applyTableDeltas = (data, array) => {
+export const applyTableDeltas = (data, tasks) => {
   const added = data.added
   const pruned = data.pruned
   const updated = data.updated
-  if (added && added.taskProxies) {
-    for (const taskProxy of added.taskProxies) {
-      array.push(taskProxy)
+  if (added && added.workflow) {
+    if (added.workflow.taskProxies) {
+      for (const taskProxy of added.workflow.taskProxies) {
+        if (!tasks[taskProxy.id]) {
+          Vue.set(tasks, taskProxy.id, taskProxy)
+        }
+      }
+    }
+    if (added.workflow.jobs) {
+      for (const job of added.workflow.jobs) {
+        const existingTask = tasks[job.firstParent.id]
+        if (existingTask) {
+          const jobs = existingTask.jobs || []
+          jobs.push(job)
+          Vue.set(existingTask, 'jobs', jobs)
+        }
+      }
+    }
+  }
+  if (updated) {
+    if (updated.taskProxies) {
+      for (const taskProxy of updated.taskProxies) {
+        if (tasks[taskProxy.id]) {
+          mergeWith(tasks[taskProxy.id], taskProxy, mergeWithCustomizer)
+          // Vue.set(tasks, taskProxy.id, existingTask)
+        }
+      }
+    }
+    if (updated.jobs) {
+      for (const job of updated.jobs) {
+        // FIXME: job.firstParent is always empty for bar? / five workflow
+        if (job.firstParent && job.firstParent.id) {
+          const existingTask = tasks[job.firstParent.id]
+          const jobs = existingTask.jobs || []
+          const existingJob = jobs.find(existingJob => existingJob.id === job.id)
+          if (existingJob) {
+            mergeWith(existingJob, job, mergeWithCustomizer)
+          } else {
+            jobs.push(job)
+          }
+          Vue.set(existingTask, 'jobs', jobs)
+        }
+      }
     }
   }
   if (pruned && pruned.taskProxies) {
-    for (const taskProxy of pruned.taskProxies) {
-      const indexToRemove = array.findIndex(task => task.id === taskProxy.id)
-      array.splice(indexToRemove, 1)
-    }
-  }
-  if (updated && updated.taskProxies) {
-    for (const taskProxy of updated.taskProxies) {
-      const existingTask = array.find(task => task.id === taskProxy.id)
-      mergeWith(existingTask, taskProxy, mergeWithCustomizer)
+    for (const taskProxyId of pruned.taskProxies) {
+      if (tasks[taskProxyId]) {
+        Vue.delete(tasks, taskProxyId)
+      }
     }
   }
 }

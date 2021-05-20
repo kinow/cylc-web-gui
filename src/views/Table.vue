@@ -20,8 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     <CylcObjectMenu />
     <div class="c-table">
       <table-component
-        :tasks="tasks"
-       props :min-depth="1"
+        :tasks="tableTasks"
         ref="table0"
         key="table0"
       ></table-component>
@@ -33,7 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import { mixin } from '@/mixins'
 import { datatable } from '@/mixins/tableview'
 import TableComponent from '@/components/cylc/table/Table'
-import { WORKFLOW_TABLE_DELTAS_SUBSCRIPTION } from '@/graphql/queries'
+import { WORKFLOW_TREE_DELTAS_SUBSCRIPTION } from '@/graphql/queries'
 import Alert from '@/model/Alert.model'
 import CylcObjectMenu from '@/components/cylc/cylcObject/Menu'
 import { applyTableDeltas } from '@/components/cylc/table/deltas'
@@ -65,8 +64,14 @@ export default {
   },
 
   data: () => ({
-    tasks: []
+    tasks: {}
   }),
+
+  computed: {
+    tableTasks: function () {
+      return Object.values(this.tasks)
+    }
+  },
 
   /**
    * Called when the user enters the view. This is executed before the component is fully
@@ -80,7 +85,7 @@ export default {
     next(vm => {
       vm
         .$workflowService
-        .startDeltasSubscription(WORKFLOW_TABLE_DELTAS_SUBSCRIPTION, vm.variables, {
+        .startDeltasSubscription(WORKFLOW_TREE_DELTAS_SUBSCRIPTION, vm.variables, {
           next: function next (response) {
             applyTableDeltas(response.data.deltas, vm.tasks)
           },
@@ -103,7 +108,7 @@ export default {
     this.$nextTick(() => {
       vm
         .$workflowService
-        .startDeltasSubscription(WORKFLOW_TABLE_DELTAS_SUBSCRIPTION, vm.variables, {
+        .startDeltasSubscription(WORKFLOW_TREE_DELTAS_SUBSCRIPTION, vm.variables, {
           next: function next (response) {
             applyTableDeltas(response.data.deltas, vm.tasks)
           },
@@ -121,7 +126,7 @@ export default {
    */
   beforeRouteLeave (to, from, next) {
     this.$workflowService.stopDeltasSubscription()
-    this.tasks = []
+    this.tasks = {}
     next()
   }
 }
