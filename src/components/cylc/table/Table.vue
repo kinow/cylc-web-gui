@@ -119,7 +119,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
           <td>
             <div class="d-flex align-content-center flex-nowrap">
               <div class="mr-1">
-                <Task v-cylc-object="item.id" :status="item.state" />
+                <Task
+                  v-cylc-object="item.id"
+                  :status="item.state"
+                  :startTime="taskStartTime(item, latestJob(item))"
+                  :estimatedDuration="taskEstimatedDuration(item)"
+                />
               </div>
               <div class="mr-1">
                 <Job :status="getTaskJobProps(item, 'state')" />
@@ -128,12 +133,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
             </div>
           </td>
           <td>{{ item.cyclePoint }}</td>
-          <td>{{ getTaskJobProps(item, 'platform') }}</td>
-          <td>{{ getTaskJobProps(item, 'jobRunnerName') }}</td>
-          <td>{{ getTaskJobProps(item, 'jobId') }}</td>
-          <td>{{ getTaskJobProps(item, 'submittedTime') }}</td>
-          <td>{{ getTaskJobProps(item, 'startedTime') }}</td>
-          <td>{{ getTaskJobProps(item, 'finishedTime') }}</td>
+          <td>{{ getTaskJobProps(latestJob(item), 'platform') }}</td>
+          <td>{{ getTaskJobProps(latestJob(item), 'jobRunnerName') }}</td>
+          <td>{{ getTaskJobProps(latestJob(item), 'jobId') }}</td>
+          <td>{{ getTaskJobProps(latestJob(item), 'submittedTime') }}</td>
+          <td>{{ getTaskJobProps(latestJob(item), 'startedTime') }}</td>
+          <td>{{ getTaskJobProps(latestJob(item), 'finishedTime') }}</td>
           <td>{{ item.meanElapsedTime }}</td>
         </tr>
       </template>
@@ -145,7 +150,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import TaskState from '@/model/TaskState.model'
 import Task from '@/components/cylc/Task'
 import Job from '@/components/cylc/Job'
-import clonedeep from 'lodash.clonedeep'
+import cloneDeep from 'lodash/cloneDeep'
+import { taskStartTime, taskEstimatedDuration, latestJob } from '@/utils/tasks'
 
 export default {
   name: 'TableComponent',
@@ -235,15 +241,9 @@ export default {
     }
   },
   methods: {
-    getTaskJobProps (task, property) {
-      if (task.jobs && task.jobs.length > 0) {
-        return task.jobs[0][property]
-      }
-      return ''
-    },
-    getTaskProxyJobProps (taskProxy, property) {
-      if (taskProxy.jobs && taskProxy.jobs.length > 0) {
-        return taskProxy.jobs[0][property]
+    getTaskJobProps (job, property) {
+      if (job) {
+        return job[property]
       }
       return ''
     },
@@ -267,11 +267,14 @@ export default {
         this.tasksFilter.states !== null &&
         this.tasksFilter.states.length > 0
       if (taskNameFilterSet || taskStatesFilterSet) {
-        this.activeFilters = clonedeep(this.tasksFilter)
+        this.activeFilters = cloneDeep(this.tasksFilter)
       } else {
         this.activeFilters = null
       }
-    }
+    },
+    taskStartTime,
+    taskEstimatedDuration,
+    latestJob
   }
 }
 </script>

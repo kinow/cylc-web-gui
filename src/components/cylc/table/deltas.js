@@ -39,9 +39,9 @@ export const applyTableDeltas = (data, tasks) => {
       for (const job of added.workflow.jobs) {
         const existingTask = tasks[job.firstParent.id]
         if (existingTask) {
-          const jobs = existingTask.jobs || []
-          jobs.push(job)
-          Vue.set(existingTask, 'jobs', jobs)
+          const children = existingTask.children || []
+          children.push(job)
+          Vue.set(existingTask, 'children', children)
         }
       }
     }
@@ -51,7 +51,6 @@ export const applyTableDeltas = (data, tasks) => {
       for (const taskProxy of updated.taskProxies) {
         if (tasks[taskProxy.id]) {
           mergeWith(tasks[taskProxy.id], taskProxy, mergeWithCustomizer)
-          // Vue.set(tasks, taskProxy.id, existingTask)
         }
       }
     }
@@ -60,14 +59,14 @@ export const applyTableDeltas = (data, tasks) => {
         // FIXME: job.firstParent is always empty for bar? / five workflow
         if (job.firstParent && job.firstParent.id) {
           const existingTask = tasks[job.firstParent.id]
-          const jobs = existingTask.jobs || []
-          const existingJob = jobs.find(existingJob => existingJob.id === job.id)
+          const children = existingTask.children || []
+          const existingJob = children.find(existingJob => existingJob.id === job.id)
           if (existingJob) {
             mergeWith(existingJob, job, mergeWithCustomizer)
           } else {
-            jobs.push(job)
+            children.push(job)
           }
-          Vue.set(existingTask, 'jobs', jobs)
+          Vue.set(existingTask, 'children', children)
         }
       }
     }
