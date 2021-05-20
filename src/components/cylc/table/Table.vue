@@ -99,8 +99,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
       </v-col>
     </v-row>
     <v-data-table
-        :headers="headers"
-        :items="tasks"
+      :headers="headers"
+      :items="filteredTasks"
     >
       <template
         slot="headerCell"
@@ -203,7 +203,7 @@ export default {
     }
   },
   computed: {
-    taskStates: () => {
+    taskStates () {
       return TaskState.enumValues.map(taskState => {
         return {
           text: taskState.name.replace(/_/g, ' '),
@@ -213,10 +213,25 @@ export default {
         return left.text.localeCompare(right.text)
       })
     },
-    tasksFilterStates: function () {
+    tasksFilterStates () {
       return this.activeFilters.states.map(selectedTaskState => {
         return selectedTaskState
       })
+    },
+    filteredTasks () {
+      const filterByName = this.filterByTaskName()
+      const filterByState = this.filterByTaskState()
+      return this.tasks
+        .filter(task => {
+          if (filterByName && filterByState) {
+            return task.name.includes(this.activeFilters.name) && this.tasksFilterStates.includes(task.state)
+          } else if (filterByName) {
+            return task.name.includes(this.activeFilters.name)
+          } else if (filterByState) {
+            return this.tasksFilterStates.includes(task.state)
+          }
+          return true
+        })
     }
   },
   methods: {
@@ -233,56 +248,28 @@ export default {
       return ''
     },
     filterByTaskName () {
-      return this.activeFilters.name !== undefined &&
-          this.activeFilters.name !== null &&
-          this.activeFilters.name.trim() !== ''
+      return this.activeFilters &&
+        this.activeFilters.name !== undefined &&
+        this.activeFilters.name !== null &&
+        this.activeFilters.name.trim() !== ''
     },
     filterByTaskState () {
-      return this.activeFilters.states !== undefined &&
-          this.activeFilters.states !== null &&
-          this.activeFilters.states.length > 0
+      return this.activeFilters &&
+        this.activeFilters.states !== undefined &&
+        this.activeFilters.states !== null &&
+        this.activeFilters.states.length > 0
     },
     filterTasks () {
       const taskNameFilterSet = this.tasksFilter.name !== undefined &&
-          this.tasksFilter.name !== null &&
-          this.tasksFilter.name.trim() !== ''
+        this.tasksFilter.name !== null &&
+        this.tasksFilter.name.trim() !== ''
       const taskStatesFilterSet = this.tasksFilter.states !== undefined &&
-          this.tasksFilter.states !== null &&
-          this.tasksFilter.states.length > 0
+        this.tasksFilter.states !== null &&
+        this.tasksFilter.states.length > 0
       if (taskNameFilterSet || taskStatesFilterSet) {
         this.activeFilters = clonedeep(this.tasksFilter)
-        this.filterNodes(this.workflows)
       } else {
-        this.removeAllFilters()
         this.activeFilters = null
-      }
-    },
-    filterNodes (nodes) {
-      for (const node of nodes) {
-        this.filterNode(node)
-      }
-    },
-    filterNode (node) {
-      let filtered = false
-      if (['cyclepoint', 'family-proxy'].includes(node.type)) {
-        for (const child of node.children) {
-          filtered = this.filterNode(child) || filtered
-        }
-      } else if (node.type === 'task-proxy') {
-        if (this.filterByTaskName() && this.filterByTaskState()) {
-          filtered = node.node.name.includes(this.activeFilters.name) && this.tasksFilterStates.includes(node.node.state)
-        } else if (this.filterByTaskName()) {
-          filtered = node.node.name.includes(this.activeFilters.name)
-        } else if (this.filterByTaskState()) {
-          filtered = this.tasksFilterStates.includes(node.node.state)
-        }
-      }
-      this.tableItemCache[node.id].filtered = filtered
-      return filtered
-    },
-    removeAllFilters () {
-      for (const tableitem of Object.values(this.tableItemCache)) {
-        tableitem.filtered = true
       }
     }
   }
