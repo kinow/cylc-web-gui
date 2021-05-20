@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 <template>
   <v-container
-    class="ma-0 pa-2"
+    class="c-table ma-0 pa-2"
   >
     <!-- Toolbar -->
     <v-row
@@ -116,7 +116,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
           slot-scope="{ item }"
         >
         <tr>
-          <td><div style="white-space: nowrap"><Task v-cylc-object="item.id" :status="item.state" />  <Job :status="getTaskJobProps(item, 'state')" /> {{ item.name }}</div></td>
+          <td>
+            <div class="d-flex align-content-center flex-nowrap">
+              <div class="mr-1">
+                <Task v-cylc-object="item.id" :status="item.state" />
+              </div>
+              <div class="mr-1">
+                <Job :status="getTaskJobProps(item, 'state')" />
+              </div>
+              <div>{{ item.name }}</div>
+            </div>
+          </td>
           <td>{{ item.cyclePoint }}</td>
           <td>{{ getTaskJobProps(item, 'platform') }}</td>
           <td>{{ getTaskJobProps(item, 'jobRunnerName') }}</td>
