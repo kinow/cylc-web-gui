@@ -29,8 +29,7 @@
     "@lumino/widgets": "^1.23.0",
     "axios": "^0.21.1",
     "axios-fetch": "^1.1.0",
-    "babel-runtime": "^6.26.0",
-    "core-js": "3",
+    "core-js": "^3.13.1",
     "dedent": "^0.7.0",
     "dotparser": "^1.0.0",
     "enumify": "^2.0.0",
@@ -87,15 +86,13 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-vue": "^7.9.0",
     "graphql-language-service-utils": "^2.5.2",
-    "istanbul-instrumenter-loader": "^3.0.1",
-    "istanbul-lib-coverage": "^3.0.0",
     "json-server": "^0.16.3",
     "markdown-it": "^12.0.6",
     "null-loader": "^4.0.1",
     "nyc": "^15.1.0",
     "postcss": "^8.2.13",
     "regenerator-runtime": "^0.13.7",
-    "sass": "^1.32.12",
+    "sass": "~1.32.12",
     "sass-loader": "^10.1.1",
     "sinon": "^10.0.0",
     "standard": "^16.0.3",
@@ -111,9 +108,6 @@
     "vuetify-loader": "^1.7.2",
     "webpack": "^4.46.0",
     "zen-observable": "^0.8.15"
-  },
-  "resolutions": {
-    "cypress": "^7.3.0"
   },
   "bugs": {
     "url": "https://github.com/cylc/cylc-ui/issues"

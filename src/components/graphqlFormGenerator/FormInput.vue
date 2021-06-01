@@ -54,7 +54,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 <script>
 import { mask } from 'vue-the-mask'
-import VueMarkdown from 'vue-markdown'
+import VueMarkdown from 'vue-markdown/src/build'
 import { formElement } from '@/components/graphqlFormGenerator/mixins'
 import VuetifyConfig from '@/components/graphqlFormGenerator/components/vuetify'
 import { mdiHelpCircleOutline } from '@mdi/js'

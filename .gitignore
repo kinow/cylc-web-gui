@@ -2,6 +2,7 @@
 node_modules/
 /dist/
 /docs/jsdoc/
+/docs/.vuepress/dist/
 
 /tests/e2e/reports/
 /tests/e2e/videos/

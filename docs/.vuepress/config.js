@@ -56,8 +56,8 @@ module.exports = {
               title: 'Components',
               collapsable: false,
               children: [
+                'alert',
                 'job',
-                'menu',
                 'task'
               ]
             }
