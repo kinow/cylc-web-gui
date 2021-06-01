@@ -1,21 +1,20 @@
 const path = require('path')
-const VuetifyLoaderPlugin = require('vuetify-loader/lib/plugin')
 
 module.exports = {
-  plugins: [
-    ['demo-code', {
+  plugins: {
+    'demo-code': {
       showText: 'show code',
       hideText: 'hide',
+      minHeight: 0,
       onlineBtns: {
         codepen: false,
         jsfiddle: false,
         codesandbox: false,
       }
-    }]
-  ],
+    }
+  },
 
   transpileDependencies: [
-    'markdown-it',
     'vuetify'
   ],
 
@@ -76,7 +75,6 @@ module.exports = {
   },
 
   chainWebpack (config) {
-
     // overwrite loader options
     for (const lang of ["sass", "scss"]) {
       for (const name of ["modules", "normal"]) {
@@ -101,4 +99,5 @@ module.exports = {
       }
     }
   }
+
 }
