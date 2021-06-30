@@ -18,15 +18,20 @@
 import { mount, createLocalVue } from '@vue/test-utils'
 import { expect } from 'chai'
 import Toolbar from '@/components/cylc/Toolbar'
-import store from '@/store/index'
+import storeOptions from '@/store/options'
 import Vuetify from 'vuetify/lib'
 import WorkflowState from '@/model/WorkflowState.model'
+import Vuex from 'vuex'
+import Vue from 'vue'
 
 const localVue = createLocalVue()
+
+Vue.use(Vuex)
 
 describe('Toolbar component', () => {
   let vuetify
   let $route
+  const store = new Vuex.Store(storeOptions)
   const mountFunction = options => {
     return mount(Toolbar, {
       localVue,

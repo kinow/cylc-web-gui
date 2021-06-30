@@ -108,12 +108,10 @@ describe('Tree component', () => {
           .get('.node-data-cyclepoint')
           .should('be.visible')
         cy.window().its('app.$workflowService.subscriptions').then(subscriptions => {
-          // Only the GScan subscription
-          expect(subscriptions.length).to.equal(1)
-        })
-        cy.window().its('app.$workflowService.deltasObservable').then(deltasObservable => {
-          // Only the GScan subscription
-          expect(deltasObservable.closed).to.equal(false)
+          // GScan 'root' subscription, and the 'workflow' subscription used by the Tree view
+          expect(Object.keys(subscriptions).length).to.equal(2)
+          expect(subscriptions.root.observable.closed).to.equal(false)
+          expect(subscriptions.workflow.observable.closed).to.equal(false)
         })
       })
   })
@@ -126,11 +124,10 @@ describe('Tree component', () => {
       .get('.node-data-job:first')
       .should('not.be.visible')
     cy.window().its('app.$workflowService.subscriptions').then(subscriptions => {
-      expect(subscriptions.length).to.equal(1)
-    })
-    cy.window().its('app.$workflowService.deltasObservable').then(deltasObservable => {
-      // Only the GScan subscription
-      expect(deltasObservable.closed).to.equal(false)
+      // Gscan 'root', the 'workflow subscription used by the Tree view
+      expect(Object.keys(subscriptions).length).to.equal(2)
+      expect(subscriptions.root.observable.closed).to.equal(false)
+      expect(subscriptions.workflow.observable.closed).to.equal(false)
     })
     cy
       .visit('/#/')
@@ -138,11 +135,9 @@ describe('Tree component', () => {
     cy.window().its('app.$workflowService.subscriptions').then(subscriptions => {
       // It will have 2, GScan + Dashboard, while the /tree/one view has 1 Delta + 1 subscription
       // (the delta is a different subscription).
-      expect(subscriptions.length).to.equal(2)
-      cy.window().its('app.$workflowService.deltasObservable').then(deltasObservable => {
-        // Now the deltas-subscription should be closed.
-        expect(deltasObservable.closed).to.equal(true)
-      })
+      expect(Object.keys(subscriptions).length).to.equal(1)
+      // Gscan remains open in the dashboard view, the 'workflow' subscription is gone since it's not used
+      expect(subscriptions.root.observable.closed).to.equal(false)
     })
   })
   it('Should display message triggers', () => {
@@ -202,7 +197,7 @@ describe('Tree component', () => {
         .should('be.visible')
       cy
         .get('.node-data-task-proxy')
-        .contains('succeeded')
+        .contains('waiting')
         .should('be.visible')
     })
     it('Should filter by task name', () => {
@@ -213,7 +208,7 @@ describe('Tree component', () => {
         .should('be.visible')
       cy
         .get('.node-data-task-proxy')
-        .contains('succeeded')
+        .contains('waiting')
         .should('be.visible')
       // eep should filter sleepy
       cy
@@ -228,34 +223,32 @@ describe('Tree component', () => {
         .should('be.visible')
       cy
         .get('.node-data-task-proxy')
-        .contains('succeeded')
+        .contains('waiting')
         .should('not.be.visible')
     })
     it('Should filter by task states', () => {
       cy.visit('/#/tree/one')
       cy
         .get('.node-data-task-proxy')
-        .contains('sleepy')
+        .contains(TaskState.FAILED.name)
         .should('be.visible')
       cy
         .get('#c-tree-filter-task-states')
         .click({ force: true })
-      // click on succeeded and waiting
       cy
         .get('.v-list-item')
-        .contains('submitted')
+        .contains(TaskState.RUNNING.name)
         .click({ force: true })
       cy
         .get('#c-tree-filter-btn')
         .click()
       cy
         .get('.node-data-task-proxy')
-        .contains('sleepy')
+        .contains(TaskState.FAILED.name)
         .should('be.not.visible')
       cy
-        .get('.node-data-task-proxy')
-        .contains('failed')
-        .should('be.visible')
+        .get('.node-data-task-proxy:visible')
+        .should('have.length', 1)
     })
     it('Should filter by task name and states', () => {
       cy.visit('/#/tree/one')
@@ -266,14 +259,14 @@ describe('Tree component', () => {
       // eep should filter sleepy
       cy
         .get('#c-tree-filter-task-name')
-        .type('fail')
+        .type('retry')
       cy
         .get('#c-tree-filter-task-states')
         .click({ force: true })
       // click on waiting, the other sleepy is succeeded, but we don't want to see it
       cy
         .get('.v-list-item')
-        .contains('submitted')
+        .contains(TaskState.WAITING.name)
         .click({ force: true })
       cy
         .get('#c-tree-filter-btn')

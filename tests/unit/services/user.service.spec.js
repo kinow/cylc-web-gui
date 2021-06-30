@@ -16,17 +16,23 @@
  */
 
 import { expect } from 'chai'
-import UserService from '@/services/user.service'
 import sinon from 'sinon'
 import axios from 'axios'
-import store from '@/store'
+import Vue from 'vue'
+import Vuex from 'vuex'
+import UserService from '@/services/user.service'
+import storeOptions from '@/store/options'
+import Alert from '@/model/Alert.model'
+
+Vue.use(Vuex)
 
 describe('UserService', () => {
+  const store = new Vuex.Store(storeOptions)
   let sandbox
   beforeEach(() => {
     sandbox = sinon.createSandbox()
     sandbox.stub(console, 'log')
-    store.dispatch('setAlert', null)
+    store.commit('SET_ALERT', null)
   })
   afterEach(() => sandbox.restore())
   describe('getUserProfile returns the logged-in user profile information', () => {
@@ -42,13 +48,13 @@ describe('UserService', () => {
         })
       )
       sandbox.stub(axios, 'get').returns(userReturned)
-      return new UserService().getUserProfile().then(function () {
-        const user = store.state.user.user
-        expect(user.username).to.equal('cylc-user-01')
-        expect(user.groups.length).to.equal(2)
-        expect(user.created).to.equal('2019-01-01')
-        expect(user.admin).to.equal(true)
-      })
+      return new UserService().getUserProfile()
+        .then(function (user) {
+          expect(user.username).to.equal('cylc-user-01')
+          expect(user.groups.length).to.equal(2)
+          expect(user.created).to.equal('2019-01-01')
+          expect(user.admin).to.equal(true)
+        })
     })
     it('should add an alert on error', () => {
       expect(store.state.alert).to.equal(null)
@@ -57,9 +63,14 @@ describe('UserService', () => {
         statusText: 'Test Status'
       }
       sandbox.stub(axios, 'get').rejects(e)
-      return new UserService().getUserProfile().finally(() => {
-        expect(store.state.alert.getText()).to.equal('Test Status')
-      })
+      return new UserService().getUserProfile()
+        .catch((error) => {
+          const alert = new Alert(error.response.statusText, null, 'error')
+          return store.dispatch('setAlert', alert)
+        })
+        .finally(() => {
+          expect(store.state.alert.getText()).to.equal('Test Status')
+        })
     })
   })
 })

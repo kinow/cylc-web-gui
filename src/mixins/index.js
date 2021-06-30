@@ -21,8 +21,7 @@ import i18n from '@/i18n'
  * Here we can define the operations that are common to components/views.
  * @type {{methods: {setPageTitle(*=, *=): string}}}
  */
-
-const mixin = {
+export default {
   /**
    * Automatically created methods for components.
    */
@@ -38,8 +37,4 @@ const mixin = {
       return `${i18n.t('App.name')} | ${i18n.t(key, params)}`
     }
   }
-}
-
-export {
-  mixin
 }

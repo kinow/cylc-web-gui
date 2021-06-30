@@ -73,4 +73,25 @@ describe('Alert component', () => {
       store.commit('SET_ALERT', null)
     })
   })
+  it('Removes the alert from the central data store when it is dismissed by the user', () => {
+    cy.visit('/#/')
+    cy.get('.c-header').should('exist')
+    const errorMessage = 'Error displayed'
+    getStore().then(store => {
+      store.dispatch('setAlert', new Alert(errorMessage, null, 'error'))
+    })
+    cy
+      .get('.v-alert')
+      .should('contain', errorMessage)
+    cy
+      .get('.v-alert')
+      .get('button')
+      .click({ force: true, multiple: true })
+    cy
+      .get('.v-alert')
+      .should('not.exist')
+    getStore().then(store => {
+      expect(store.state.alert).to.equal(null)
+    })
+  })
 })

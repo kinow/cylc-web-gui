@@ -16,14 +16,19 @@
  */
 
 import { expect } from 'chai'
-import store from '@/store'
-import Alert from '@/model/Alert.model'
 import sinon from 'sinon'
+import Vue from 'vue'
+import Vuex from 'vuex'
+import storeOptions from '@/store/options'
+import Alert from '@/model/Alert.model'
+
+Vue.use(Vuex)
 
 /**
  * Tests for the store/index module.
  */
 describe('index', () => {
+  const store = new Vuex.Store(storeOptions)
   // using sinon to capture console.log
   beforeEach(() => {
     sinon.stub(console, 'log')

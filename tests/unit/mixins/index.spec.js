@@ -16,13 +16,13 @@
  */
 
 import { expect } from 'chai'
-import { mixin } from '@/mixins/index'
+import pageMixin from '@/mixins/index'
 import { shallowMount } from '@vue/test-utils'
 
 describe('Index mixin', () => {
   it('should display the application title correctly', () => {
     const component = shallowMount({
-      mixins: [mixin],
+      mixins: [pageMixin],
       render () {}
     })
     const title = component.vm.getPageTitle('App.dashboard')

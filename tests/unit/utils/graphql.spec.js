@@ -15,13 +15,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import Vue from 'vue'
+import Vuex from 'vuex'
 import { expect } from 'chai'
 // need the polyfill as otherwise ApolloClient fails to be imported as it checks for a global fetch object on import...
 import 'cross-fetch/polyfill'
 import * as graphql from '@/graphql'
-import store from '@/store'
+import storeOptions from '@/store/options'
+
+Vue.use(Vuex)
 
 describe('utils', () => {
+  const store = new Vuex.Store(storeOptions)
   describe('graphql', () => {
     describe('ApolloClient', () => {
       it('should create an apollo client', () => {
@@ -33,49 +38,54 @@ describe('utils', () => {
 
     describe('SubscriptionClient', () => {
       beforeEach(() => {
+        store.commit('SET_OFFLINE', false)
         store.state.offline = false
       })
       it('should create a subscription client', () => {
-        const subscriptionClient = graphql.createSubscriptionClient('ws://localhost:12345', {
-          reconnect: false,
-          lazy: true
-        },
-        {})
+        const subscriptionClient = graphql.createSubscriptionClient(
+          'ws://localhost:12345',
+          {
+            reconnect: false,
+            lazy: true
+          },
+          {})
         expect(typeof subscriptionClient.request).to.equal('function')
       })
       it('should call the subscription client callbacks', () => {
-        const subscriptionClient = graphql.createSubscriptionClient('ws://localhost:12345', {
-          reconnect: false,
-          lazy: true
-        },
-        {})
+        const subscriptionClient = graphql.createSubscriptionClient(
+          'ws://localhost:12345',
+          {
+            reconnect: false,
+            lazy: true
+          },
+          {})
         expect(store.state.offline).to.equal(false)
 
-        let eventName, offline
-        for ({ eventName, offline } of [
+        let eventName, expectedOffline
+        for ({ eventName, expectedOffline } of [
           {
             eventName: 'connecting',
-            offline: true
+            expectedOffline: true
           },
           {
             eventName: 'connected',
-            offline: false
+            expectedOffline: false
           },
           {
             eventName: 'reconnecting',
-            offline: true
+            expectedOffline: true
           },
           {
             eventName: 'reconnected',
-            offline: false
+            expectedOffline: false
           },
           {
             eventName: 'disconnected',
-            offline: true
+            expectedOffline: true
           }
         ]) {
           subscriptionClient.eventEmitter.emit(eventName)
-          expect(store.state.offline).to.equal(offline)
+          expect(store.state.offline).to.equal(expectedOffline)
         }
       })
     })

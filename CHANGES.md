@@ -10,13 +10,15 @@ release.
 
 ### Enhancements
 
-[#656](https://github.com/cylc/cylc-ui/pull/656) - Show runhead-limited tasks.
+[#656](https://github.com/cylc/cylc-ui/pull/656) - Show runahead-limited tasks.
 
 [#657](https://github.com/cylc/cylc-ui/pull/657) - Display a different icon, with
 a shadow underneath, for the Job component.
 
 [#658](https://github.com/cylc/cylc-ui/pull/658) - Allow user to set the order
 of cycle points.
+
+[#543](https://github.com/cylc/cylc-ui/pull/543) - Use deltas in GScan.
 
 ### Fixes
 

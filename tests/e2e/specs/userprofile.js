@@ -21,7 +21,7 @@ import {
   resetFontSize,
   INITIAL_FONT_SIZE
 } from '@/utils/font-size'
-import CylcTree from '@/components/cylc/tree/cylc-tree'
+import * as CylcTree from '@/components/cylc/tree/index'
 
 describe('User Profile', () => {
   it('Visits the user profile', () => {

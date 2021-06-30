@@ -36,14 +36,14 @@ describe('Workflow view and component/widget', () => {
     cy.visit('/#/workflows/one')
     cy.get('.lm-TabBar-tabLabel').should('have.length', 1)
     cy.get('a.add-view').click()
-    cy.get('#toolbar-add-tree-view').click()
+    cy.get('#toolbar-add-Tree-view').click()
     cy.get('.lm-TabBar-tabLabel').should('have.length', 2)
   })
   it('Should be able to add two widgets of different types', () => {
     cy.visit('/#/workflows/one')
     cy.get('.lm-TabBar-tabLabel').should('have.length', 1)
     cy.get('a.add-view').click()
-    cy.get('#toolbar-add-mutations-view').click()
+    cy.get('#toolbar-add-Mutations-view').click()
     cy.get('.lm-TabBar-tabLabel').should('have.length', 2)
     cy
       .get('.lm-TabBar-tabLabel')
@@ -56,7 +56,7 @@ describe('Workflow view and component/widget', () => {
     cy.get('.lm-TabBar-tabLabel').should('have.length', 1)
     // add a tree view
     cy.get('a.add-view').click()
-    cy.get('#toolbar-add-tree-view').click()
+    cy.get('#toolbar-add-Tree-view').click()
     // ensure we have 2 widgets now
     cy.get('.lm-TabBar-tabLabel').should('have.length', 2)
     // close all widgets
@@ -69,7 +69,7 @@ describe('Workflow view and component/widget', () => {
     cy.get('.lm-TabBar-tabLabel').should('have.length', 1)
     // add a tree view
     cy.get('a.add-view').click()
-    cy.get('#toolbar-add-tree-view').click()
+    cy.get('#toolbar-add-Tree-view').click()
     // ensure we have 2 widgets now
     cy.get('.lm-TabBar-tabLabel').should('have.length', 2)
     cy.visit('/#/')
@@ -81,7 +81,7 @@ describe('Workflow view and component/widget', () => {
     cy.get('.lm-TabBar-tabLabel').should('have.length', 1)
     // add a tree view
     cy.get('a.add-view').click()
-    cy.get('#toolbar-add-tree-view').click()
+    cy.get('#toolbar-add-Tree-view').click()
     // ensure we have 2 widgets now
     cy.get('.lm-TabBar-tabLabel').should('have.length', 2)
     // this is OK, as we render one for every route/workflow requested

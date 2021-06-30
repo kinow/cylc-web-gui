@@ -343,24 +343,11 @@ function createJobNode (job) {
   }
 }
 
-/**
- * @param {?WorkflowGraphQLData} workflow
- * @returns {boolean}
- */
-function containsTreeData (workflow) {
-  return workflow !== undefined &&
-    workflow !== null &&
-    workflow.cyclePoints && Array.isArray(workflow.cyclePoints) &&
-    workflow.familyProxies && Array.isArray(workflow.familyProxies) &&
-    workflow.taskProxies && Array.isArray(workflow.taskProxies)
-}
-
 export {
   createWorkflowNode,
   createCyclePointNode,
   createFamilyProxyNode,
   createTaskProxyNode,
   createJobNode,
-  containsTreeData,
   getCyclePointId
 }

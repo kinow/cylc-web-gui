@@ -28,7 +28,10 @@ describe('Default layout', () => {
         throw new Error('Error raised in Cypress stub!')
       })
       // now visit dashboard, that calls service.subscribe, which will raise an uncaught error...
-      cy.visit('/#/')
+      cy
+        .get('.v-list-item')
+        .contains('Dashboard')
+        .click({ force: true })
       cy
         .get('.v-alert')
         .should('be.visible')

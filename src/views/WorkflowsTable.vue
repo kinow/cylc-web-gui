@@ -37,7 +37,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
           </v-alert>
         <v-data-table
           :headers="headers"
-          :items="workflows"
+          :items="workflowsTable"
           :loading="isLoading"
         >
           <template slot="no-data" v-if="!isLoading">
@@ -77,27 +77,32 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 <script>
 import { mapState } from 'vuex'
-import { mixin } from '@/mixins/index'
 import i18n from '@/i18n'
-import { WORKFLOWS_TABLE_QUERY } from '@/graphql/queries'
 import { mdiTable } from '@mdi/js'
-
-// query to retrieve all workflows
-const QUERIES = {
-  root: WORKFLOWS_TABLE_QUERY
-}
+import pageMixin from '@/mixins/index'
+import subscriptionViewMixin from '@/mixins/subscriptionView'
+import SubscriptionQuery from '@/model/SubscriptionQuery.model'
+import { WORKFLOWS_TABLE_DELTAS_SUBSCRIPTION } from '@/graphql/queries'
 
 export default {
-  mixins: [mixin],
+  name: 'WorkflowsTable',
+  mixins: [
+    pageMixin,
+    subscriptionViewMixin
+  ],
   metaInfo () {
     return {
       title: this.getPageTitle('App.workflows')
     }
   },
   data: () => ({
-    viewID: 'GScan: ' + Math.random(),
-    subscriptions: {},
-    isLoading: true,
+    query: new SubscriptionQuery(
+      WORKFLOWS_TABLE_DELTAS_SUBSCRIPTION,
+      {},
+      'root',
+      ['workflows/applyWorkflowsDeltas'],
+      []
+    ),
     headers: [
       {
         sortable: true,
@@ -122,55 +127,15 @@ export default {
     ],
     svgPath: mdiTable
   }),
-
   computed: {
-    ...mapState('workflows', ['workflows'])
+    ...mapState('workflows', ['workflows']),
+    workflowsTable () {
+      return Object.values(this.workflows)
+    }
   },
-
-  created () {
-    this.$workflowService.register(
-      this,
-      {
-        activeCallback: this.setActive
-      }
-    )
-    this.subscribe('root')
-  },
-
-  beforeRouteLeave (to, from, next) {
-    this.$workflowService.unregister(this)
-    next()
-  },
-
   methods: {
     viewWorkflow (workflow) {
       this.$router.push({ path: `/workflows/${workflow.name}` })
-    },
-
-    subscribe (queryName) {
-      const id = this.$workflowService.subscribe(
-        this,
-        QUERIES[queryName],
-        this.setActive
-      )
-      if (!(queryName in this.subscriptions)) {
-        this.subscriptions[queryName] = {
-          id,
-          active: false
-        }
-      }
-    },
-
-    unsubscribe (queryName) {
-      if (queryName in this.subscriptions) {
-        this.$workflowService.unsubscribe(
-          this.subscriptions[queryName].id
-        )
-      }
-    },
-
-    setActive (isActive) {
-      this.isLoading = !isActive
     }
   }
 }

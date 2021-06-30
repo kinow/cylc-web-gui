@@ -15,16 +15,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { createLocalVue, mount } from '@vue/test-utils'
 import { expect } from 'chai'
-import store from '@/store/index'
+import { createLocalVue, mount } from '@vue/test-utils'
+import Vue from 'vue'
+import Vuex from 'vuex'
 import Vuetify from 'vuetify/lib'
 import App from '@/App'
 import Empty from '@/layouts/Empty'
+import storeOptions from '@/store/options'
 
 const localVue = createLocalVue()
 
+Vue.use(Vuex)
+
 describe('App', () => {
+  const store = new Vuex.Store(storeOptions)
   let vuetify
   let $route
   const mountFunction = options => {

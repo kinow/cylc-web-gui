@@ -1,27 +1,25 @@
 {
-  "workflows": [
-    {
-      "id": "user|one",
-      "name": "one",
-      "status": "running",
-      "owner": "user",
-      "host": "localhost",
-      "port": 43079,
-      "stateTotals": {
-        "waiting": 1,
-        "expired": 0,
-        "preparing": 0,
-        "submit-failed": 0,
-        "submitted": 3,
-        "running": 1,
-        "failed": 0,
-        "succeeded": 0
-      },
-      "latestStateTasks": {
-        "running": [
-          "running-task"
-        ]
-      }
+  "workflow": {
+    "id": "user|one",
+    "name": "one",
+    "status": "running",
+    "owner": "user",
+    "host": "localhost",
+    "port": 43079,
+    "stateTotals": {
+      "waiting": 1,
+      "expired": 0,
+      "preparing": 0,
+      "submit-failed": 0,
+      "submitted": 3,
+      "running": 1,
+      "failed": 0,
+      "succeeded": 0
+    },
+    "latestStateTasks": {
+      "running": [
+        "running-task"
+      ]
     }
-  ]
+  }
 }

@@ -14,7 +14,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
-
 <template>
   <div
     class="c-gscan"
@@ -122,7 +121,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                   <v-flex
                     v-if="scope.node.type === 'workflow'"
                     class="c-gscan-workflow-name"
-                    shrink
                   >
                     <workflow-icon
                       :status="scope.node.node.status"
@@ -130,13 +128,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                     />
                     <v-tooltip top>
                       <template v-slot:activator="{ on }">
-                        <span v-on="on">{{ scope.node.node.name }}</span>
+                        <span v-on="on">{{ scope.node.node.name || scope.node.id }}</span>
                       </template>
-                      <span>{{ scope.node.node.name }}</span>
+                      <span>{{ scope.node.node.name || scope.node.id }}</span>
                     </v-tooltip>
                   </v-flex>
+                  <!-- We check the latestStateTasks below as offline workflows won't have a latestStateTasks property -->
                   <v-flex
-                    v-if="scope.node.type === 'workflow'"
+                    v-if="scope.node.type === 'workflow' && scope.node.node.latestStateTasks"
                     class="text-right c-gscan-workflow-states"
                   >
                     <!-- task summary tooltips -->
@@ -145,37 +144,37 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                       :key="`${scope.node.id}-summary-${state}`"
                       :class="getTaskStateClasses(scope.node.node, state)"
                     >
-                      <v-tooltip color="black" top>
-                        <template v-slot:activator="{ on }">
-                          <!-- a v-tooltip does not work directly set on Cylc job component, so we use a dummy button to wrap it -->
-                          <!-- NB: most of the classes/directives in these button are applied so that the user does not notice it is a button -->
-                          <v-btn
-                            v-on="on"
-                            class="ma-0 pa-0"
-                            min-width="0"
-                            min-height="0"
-                            style="font-size: 120%; width: auto"
-                            :ripple="false"
-                            dark
-                            icon
-                          >
-                            <job :status="state" />
-                          </v-btn>
-                        </template>
-                        <!-- tooltip text -->
-                        <span>
-                          <span class="grey--text">{{ countTasksInState(scope.node.node, state) }} {{ state }}. Recent {{ state }} tasks:</span>
-                          <br/>
-                          <span v-for="(task, index) in tasks.slice(0, maximumTasksDisplayed)" :key="index">
-                            {{ task }}<br v-if="index !== tasks.length -1" />
-                          </span>
+                    <v-tooltip color="black" top>
+                      <template v-slot:activator="{ on }">
+                        <!-- a v-tooltip does not work directly set on Cylc job component, so we use a dummy button to wrap it -->
+                        <!-- NB: most of the classes/directives in these button are applied so that the user does not notice it is a button -->
+                        <v-btn
+                          v-on="on"
+                          class="ma-0 pa-0"
+                          min-width="0"
+                          min-height="0"
+                          style="font-size: 120%; width: auto"
+                          :ripple="false"
+                          dark
+                          icon
+                        >
+                          <job :status="state" />
+                        </v-btn>
+                      </template>
+                      <!-- tooltip text -->
+                      <span>
+                        <span class="grey--text">{{ countTasksInState(scope.node.node, state) }} {{ state }}. Recent {{ state }} tasks:</span>
+                        <br/>
+                        <span v-for="(task, index) in tasks.slice(0, maximumTasksDisplayed)" :key="index">
+                          {{ task }}<br v-if="index !== tasks.length -1" />
                         </span>
-                      </v-tooltip>
-                    </span>
+                      </span>
+                    </v-tooltip>
+                  </span>
                   </v-flex>
                 </v-layout>
               </v-list-item-title>
-          </v-list-item>
+            </v-list-item>
           </template>
         </tree>
       </div>
@@ -190,18 +189,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 </template>
 
 <script>
-import { GSCAN_QUERY } from '@/graphql/queries'
-import WorkflowState from '@/model/WorkflowState.model'
+import { mapState } from 'vuex'
 import { mdiFilter } from '@mdi/js'
+import subscriptionComponentMixin from '@/mixins/subscriptionComponent'
+import JobState from '@/model/JobState.model'
+import TaskState from '@/model/TaskState.model'
+import SubscriptionQuery from '@/model/SubscriptionQuery.model'
+import WorkflowState from '@/model/WorkflowState.model'
 import Job from '@/components/cylc/Job'
 import Tree from '@/components/cylc/tree/Tree'
-import { createWorkflowNode } from '@/components/cylc/tree/tree-nodes'
-import TaskState from '@/model/TaskState.model'
 import WorkflowIcon from '@/components/cylc/gscan/WorkflowIcon'
-
-const QUERIES = {
-  root: GSCAN_QUERY
-}
+import { createWorkflowNode } from '@/components/cylc/gscan/nodes'
+import { GSCAN_DELTAS_SUBSCRIPTION } from '@/graphql/queries'
 
 export default {
   name: 'GScan',
@@ -210,21 +209,18 @@ export default {
     Tree,
     WorkflowIcon
   },
-  props: {
-    /**
-     * Vanilla workflows object from GraphQL query
-     * @type {{}|null}
-     */
-    workflows: {
-      type: Array,
-      required: true
-    }
-  },
+  mixins: [
+    subscriptionComponentMixin
+  ],
   data () {
     return {
-      viewID: '',
-      subscriptions: {},
-      isLoading: true,
+      query: new SubscriptionQuery(
+        GSCAN_DELTAS_SUBSCRIPTION,
+        {},
+        'root',
+        ['workflows/applyWorkflowsDeltas'],
+        ['workflows/clearWorkflows']
+      ),
       maximumTasksDisplayed: 5,
       svgPaths: {
         filter: mdiFilter
@@ -236,7 +232,7 @@ export default {
        *   {
        *     id: string,
        *     name: string,
-       *     stateTotals: object,
+       *     stateTotals: Map<string, string>,
        *     status: string
        *   }
        * ]}
@@ -280,13 +276,14 @@ export default {
       filters: [
         {
           title: 'workflow state',
-          items: WorkflowState.enumValues.map(state => {
-            return {
-              text: state.name,
-              value: state,
-              model: true
-            }
-          })
+          items: WorkflowState.enumValues
+            .map(state => {
+              return {
+                text: state.name,
+                value: state,
+                model: true
+              }
+            })
         },
         {
           title: 'task state',
@@ -296,6 +293,8 @@ export default {
               value: state,
               model: false
             }
+          }).sort((left, right) => {
+            return left.text.localeCompare(right.text)
           })
         }
         // {
@@ -310,6 +309,7 @@ export default {
     }
   },
   computed: {
+    ...mapState('workflows', ['workflows']),
     /**
      * Sort workflows by type first, showing running or paused workflows first,
      * then stopped. Within each group, workflows are sorted alphabetically
@@ -329,9 +329,7 @@ export default {
             { numeric: true, sensitivity: 'base' })
       })
         .map(workflow => {
-          const node = createWorkflowNode(workflow)
-          delete node.children
-          return node
+          return createWorkflowNode(workflow)
         })
     }
   },
@@ -343,8 +341,8 @@ export default {
     filters: {
       deep: true,
       immediate: false,
-      handler: function (newVal, _) {
-        this.filterWorkflows(this.workflows, this.searchWorkflows, newVal)
+      handler: function (newVal) {
+        this.filterWorkflows(Object.values(this.workflows), this.searchWorkflows, newVal)
       }
     },
     /**
@@ -353,70 +351,18 @@ export default {
      */
     searchWorkflows: {
       immediate: false,
-      handler: function (newVal, _) {
-        this.filterWorkflows(this.workflows, newVal, this.filters)
+      handler: function (newVal) {
+        this.filterWorkflows(Object.values(this.workflows), newVal, this.filters)
       }
     },
-    /**
-     * If the subscription changes the workflows object (any part of it),
-     * then we apply the filters to the list of workflows.
-     */
     workflows: {
-      deep: true,
       immediate: true,
-      handler: function (newVal, _) {
-        this.filterWorkflows(newVal, this.searchWorkflows, this.filters)
+      handler: function () {
+        this.filterWorkflows(Object.values(this.workflows), this.searchWorkflows, this.filters)
       }
     }
   },
-  created () {
-    this.viewID = `GScan(*): ${Math.random()}`
-    this.$workflowService.register(
-      this,
-      {
-        activeCallback: this.setActive
-      }
-    )
-    this.subscribe('root')
-  },
-  beforeDestroy () {
-    this.$workflowService.unregister(this)
-  },
   methods: {
-    subscribe (queryName) {
-      /**
-       * Subscribe this view to a new GraphQL query.
-       * @param {string} queryName - Must be in QUERIES.
-       */
-      if (!(queryName in this.subscriptions)) {
-        this.subscriptions[queryName] =
-          this.$workflowService.subscribe(
-            this,
-            QUERIES[queryName]
-          )
-      }
-    },
-
-    unsubscribe (queryName) {
-      /**
-       * Unsubscribe this view to a new GraphQL query.
-       * @param {string} queryName - Must be in QUERIES.
-       */
-      if (queryName in this.subscriptions) {
-        this.$workflowService.unsubscribe(
-          this.subscriptions[queryName]
-        )
-        delete this.subscriptions[queryName]
-      }
-    },
-
-    setActive (isActive) {
-      /** Toggle the isLoading state.
-       * @param {bool} isActive - Are this views subs active.
-       */
-      this.isLoading = !isActive
-    },
-
     getWorkflowClass (node) {
       return {
         'c-workflow-stopped': node && node.status && node.status === WorkflowState.STOPPED.name
@@ -438,7 +384,7 @@ export default {
      *  {
      *   id: string,
      *   name: string,
-     *   stateTotals: object,
+     *   stateTotals: Map<string, string>,
      *   status: string
      *  }
      * ]} workflows list of workflows
@@ -470,15 +416,48 @@ export default {
         }
         // task states
         if (taskStates.size > 0) {
-          const thisWorkflowStates = Object.entries(workflow.stateTotals)
-            .filter(entry => entry[1] > 0)
-            .map(entry => entry[0])
-          const intersection = thisWorkflowStates.filter(item => taskStates.has(item))
+          const thisWorkflowStates = workflow.stateTotals ? this.getWorkflowStates(workflow.stateTotals) : []
+          const intersection = thisWorkflowStates.filter(item => taskStates.has(item.text))
           return intersection.length !== 0
         }
         return true
       })
     },
+
+    /**
+     * @param stateTotals {Map<string, string>} - object with the keys being states, and values the count
+     * @return {[{
+     *   text: string,
+     *   summary: string
+     * }]}
+     */
+    getWorkflowStates (stateTotals) {
+      if (!stateTotals) {
+        return []
+      }
+      const jobStates = JobState.enumValues.map(jobState => jobState.name)
+      const workflowStates = Object
+        .entries(stateTotals)
+        .filter(stateTotal => {
+          // GraphQL will return all the task states possible in a workflow, but we
+          // only want the states that have an equivalent state for a job. So we filter
+          // out the states that do not exist for jobs, and that have active tasks in
+          // the workflow (no point keeping the empty states, as they are not to be
+          // displayed).
+          return jobStates.includes(stateTotal[0]) && stateTotal[1] > 0
+        })
+      const summary = workflowStates
+        .map(stateTotal => `${stateTotal[0]}, ${stateTotal[1]}`)
+        .join(', ')
+      return workflowStates
+        .map(stateTotal => {
+          return {
+            text: stateTotal[0],
+            summary: `Tasks: ${summary}`
+          }
+        })
+    },
+
     /**
      * Return `true` iff all the items have been selected. `false` otherwise.
      *
@@ -492,6 +471,7 @@ export default {
     allItemsSelected (items) {
       return items.every(item => item.model === true)
     },
+
     /**
      * If every element in the list is `true`, then we will set every element in the
      * list to `false`. Otherwise, we set all the elements in the list to `true`.

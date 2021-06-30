@@ -28,12 +28,13 @@ import Vue from 'vue'
 import Router from 'vue-router'
 import Meta from 'vue-meta'
 import NProgress from 'nprogress'
-import store from '@/store'
+import store from '@/store/index'
 
 import 'nprogress/css/nprogress.css'
 
 // Routes
 import paths from './paths'
+import Alert from '@/model/Alert.model'
 
 function route (path) {
   const copy = Object.assign({}, path)
@@ -69,15 +70,19 @@ Vue.use(Meta)
 router.beforeResolve((to, from, next) => {
   NProgress.start()
   if (to.name) {
+    let title
+    let workflowName
     if (to.meta.toolbar) {
       // When a workflow is being displayed, we set the title to a
       // different value.
-      store.commit('app/setTitle', to.params.workflowName)
-      store.commit('workflows/SET_WORKFLOW_NAME', { workflowName: to.params.workflowName })
+      title = to.params.workflowName
+      workflowName = to.params.workflowName
     } else {
-      store.commit('app/setTitle', to.name)
-      store.commit('workflows/SET_WORKFLOW_NAME', { workflowName: null })
+      title = to.name
+      workflowName = null
     }
+    store.commit('app/setTitle', title)
+    store.commit('workflows/SET_WORKFLOW_NAME', workflowName)
     store.dispatch('setAlert', null).then(() => {})
   }
   next()
@@ -85,9 +90,15 @@ router.beforeResolve((to, from, next) => {
 
 router.beforeEach((to, from, next) => {
   if (!store.state.user.user) {
-    router.app.$userService.getUserProfile().then(() => {
-      next()
-    })
+    router.app.$userService.getUserProfile()
+      .then((user) => {
+        store.commit('user/SET_USER', user)
+        next()
+      })
+      .catch(error => {
+        const alert = new Alert(error, null, 'error')
+        return store.dispatch('setAlert', alert)
+      })
   } else {
     next()
   }

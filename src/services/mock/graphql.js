@@ -26,13 +26,15 @@ const DATA_MAPPING = {
   IntrospectionQuery: data.IntrospectionQuery,
   OnWorkflowTreeDeltasData: {
     deltas: {
-      added: {
-        workflow: data.OnWorkflowTreeDeltasData.workflows[0]
-      }
+      added: data.OnWorkflowTreeDeltasData
     }
   },
   DashboardSubscriptionQuery: data.DashboardSubscriptionQuery,
-  GscanSubscriptionQuery: data.GscanSubscriptionQuery,
+  GscanSubscriptionQuery: {
+    deltas: {
+      added: data.GscanSubscriptionQuery
+    }
+  },
   WorkflowsTableQuery: data.WorkflowsTableQuery
 }
 

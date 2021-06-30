@@ -59,7 +59,7 @@ describe('Mutations component', () => {
       .then((loader) => {
         const firstChild = loader.children('div').first()
         // The skeleton may, or may not, still be displaying in the UI...
-        if (firstChild.attr('class').includes('skeleton')) {
+        if (firstChild.attr('class') && firstChild.attr('class').includes('skeleton')) {
           cy.wrap(firstChild)
             .should('not.exist')
         }
@@ -71,11 +71,11 @@ describe('Mutations component', () => {
       .find('.c-task')
       .click({ force: true })
     cy
-      .get('.c-mutation-menu-list')
+      .get('.c-mutation-menu-list:first')
+      .find('.v-list-item__action > .v-icon')
+      .should('exist')
       .should('be.visible')
-      .find('.v-list-item__action')
-      .first()
-      .click()
+      .click({ force: true })
   }
   const submitMutationForms = () => {
     cy.visit('/#/workflows/one')
@@ -85,7 +85,11 @@ describe('Mutations component', () => {
         workflow: ['workflowMutation']
       }
     })
-    cy.get('.treeitem').should('be.visible')
+    cy
+      .get('.c-tree')
+      .get('.treeitem')
+      .get('.c-task')
+      .should('be.visible')
     openMutationsForm('BAD')
     cy.wait(['@HoldMutationQuery'])
     // fill mocked mutation form with any data

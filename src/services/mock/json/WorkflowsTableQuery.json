@@ -1,11 +1,9 @@
 {
-  "workflows": [
-    {
-      "id": "user|one",
-      "name": "one",
-      "owner": "user",
-      "host": "localhost",
-      "port": 43079
-    }
-  ]
+  "workflow": {
+    "id": "user|one",
+    "name": "one",
+    "owner": "user",
+    "host": "localhost",
+    "port": 43079
+  }
 }

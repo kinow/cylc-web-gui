@@ -16,11 +16,16 @@
  */
 
 import { expect } from 'chai'
-import mixin from '@/mixins/toolbar'
 import { shallowMount } from '@vue/test-utils'
-import store from '@/store'
+import Vue from 'vue'
+import Vuex from 'vuex'
+import mixin from '@/mixins/toolbar'
+import storeOptions from '@/store/options'
+
+Vue.use(Vuex)
 
 describe('Toolbar mixin', () => {
+  const store = new Vuex.Store(storeOptions)
   it('should create the default data correctly', () => {
     const oldWindow = global.window
     global.window = {

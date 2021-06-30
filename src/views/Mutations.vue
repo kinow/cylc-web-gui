@@ -42,6 +42,7 @@ import gql from 'graphql-tag'
 import { getIntrospectionQuery as getGraphQLIntrospectionQuery, print } from 'graphql'
 
 import Mutation from '@/components/cylc/Mutation'
+import subscriptionViewMixin from '@/mixins/subscriptionView'
 
 export function associate (mutations, objects) {
   const associations = {}
@@ -86,10 +87,10 @@ export function associate (mutations, objects) {
 
 export default {
   name: 'Mutations',
+  mixins: [subscriptionViewMixin],
   components: {
     Mutation
   },
-
   data: () => ({
     loaded: false,
     selectedMutation: 'sampleMutation',
@@ -118,7 +119,6 @@ export default {
       ]
     }
   }),
-
   computed: {
     mutationNames () {
       const names = []
@@ -245,11 +245,9 @@ export default {
       }
     }
   },
-
   created () {
     this.getSchema()
   },
-
   methods: {
     getIntrospectionQuery () {
       // we are only interested in mutations so can make our life
@@ -282,7 +280,6 @@ export default {
         print(fullIntrospection.definitions[3])
       )
     },
-
     getSchema () {
       this.$workflowService.apolloClient.query({
         query: this.getIntrospectionQuery(),
@@ -294,7 +291,6 @@ export default {
         this.loaded = true
       })
     },
-
     getMutation (name) {
       if (name === 'sampleMutation') {
         return this.sampleMutation
@@ -305,12 +301,10 @@ export default {
         }
       }
     },
-
     /* Associate mutations with cylc objects (e.g. workflows, cyclepoints) */
     associate (mutations, objects) {
       this.associations = associate(this.mutations, this.cylcObjects)
     },
-
     /* Return names of mutations which relate to the provided object type.
      *
      * Returns a dictionary: {
@@ -342,6 +336,5 @@ export default {
       return ret
     }
   }
-
 }
 </script>

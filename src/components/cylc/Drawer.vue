@@ -40,9 +40,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
       </v-list-item>
 
       <v-list-item
-          to="/"
-          active-class="primary grey--text text--darken-3"
-          class="v-list-item"
+        to="/"
+        active-class="primary grey--text text--darken-3"
+        class="v-list-item"
       >
         <v-list-item-action>
           <v-icon>{{ svgPaths.home }}</v-icon>
@@ -50,9 +50,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         <v-list-item-title>Dashboard</v-list-item-title>
       </v-list-item>
       <v-list-item
-          to="/graphiql"
-          active-class="primary grey--text text--darken-3"
-          class="v-list-item"
+        to="/graphiql"
+        active-class="primary grey--text text--darken-3"
+        class="v-list-item"
       >
         <v-list-item-action>
           <v-icon>{{ svgPaths.graphql }}</v-icon>
@@ -61,15 +61,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
       </v-list-item>
       <v-divider />
       <v-subheader>Workflows</v-subheader>
-      <g-scan
-        :workflows="workflows"
-      />
+      <g-scan />
     </v-list>
     <template v-slot:append>
       <div class="px-4 py-2 d-flex justify-center">
         <span class="grey--text text--darken-2">
-            <strong v-if="environment !== 'PRODUCTION'">{{ environment }}</strong> {{ $t('App.name') }} {{ version }}
-          </span>
+          <strong v-if="environment !== 'PRODUCTION'">{{ environment }}</strong> {{ $t('App.name') }} {{ version }}
+        </span>
       </div>
     </template>
   </v-navigation-drawer>
@@ -101,7 +99,6 @@ export default {
     }
   },
   computed: {
-    ...mapState('workflows', ['workflows']),
     ...mapState('user', ['user']),
     drawer: {
       get: function () {

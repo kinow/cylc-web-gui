@@ -15,58 +15,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import isArray from 'lodash/isArray'
 import {
+  createWorkflowNode,
   createCyclePointNode,
   createFamilyProxyNode,
   createJobNode,
   createTaskProxyNode
-} from '@/components/cylc/tree/tree-nodes'
-import { populateTreeFromGraphQLData } from '@/components/cylc/tree/index'
-import store from '@/store/index'
-import AlertModel from '@/model/Alert.model'
-
-/**
- * Helper object used to iterate pruned deltas data.
- */
-const PRUNED = {
-  jobs: 'removeJob',
-  taskProxies: 'removeTaskProxy',
-  familyProxies: 'removeFamilyProxy'
-}
-
-/**
- * @typedef {Object} DeltasPruned
- * @property {Array<string>} taskProxies - IDs of task proxies removed
- * @property {Array<string>} familyProxies - IDs of family proxies removed
- * @property {Array<string>} jobs - IDs of jobs removed
- */
-
-/**
- * Deltas pruned.
- *
- * @param {DeltasPruned} pruned - deltas pruned
- * @param {CylcTree} tree
- */
-function applyDeltasPruned (pruned, tree) {
-  Object.keys(PRUNED).forEach(prunedKey => {
-    if (pruned[prunedKey]) {
-      for (const id of pruned[prunedKey]) {
-        try {
-          tree[PRUNED[prunedKey]](id)
-        } catch (error) {
-          // eslint-disable-next-line no-console
-          console.error('Error applying pruned-delta, will continue processing the remaining data', error, id)
-          store.dispatch('setAlert', new AlertModel('Error applying pruned-delta, see browser console logs for more. Please reload your browser tab to retrieve the full flow state', null, 'error'))
-        }
-      }
-    }
-  })
-}
+} from '@/components/cylc/tree/nodes'
+import * as CylcTree from '@/components/cylc/tree/index'
 
 /**
  * Helper object used to iterate added deltas data.
  */
 const ADDED = {
+  workflow: [createWorkflowNode, 'addWorkflow'],
   cyclePoints: [createCyclePointNode, 'addCyclePoint'],
   familyProxies: [createFamilyProxyNode, 'addFamilyProxy'],
   taskProxies: [createTaskProxyNode, 'addTaskProxy'],
@@ -74,37 +37,40 @@ const ADDED = {
 }
 
 /**
- * @typedef {Object} DeltasAdded
- * @property {Object} workflow
- * @property {Array<Object>} cyclePoints
- * @property {Array<Object>} familyProxies
- * @property {Array<Object>} taskProxies
- * @property {Array<Object>} jobs
- */
-
-/**
  * Deltas added.
  *
  * @param {DeltasAdded} added
- * @param {CylcTree} tree
+ * @param {Workflow} workflow
+ * @param {Lookup} lookup
+ * @param {*} options
  */
-function applyDeltasAdded (added, tree) {
+function applyDeltasAdded (added, workflow, lookup, options) {
+  const result = {
+    errors: []
+  }
   Object.keys(ADDED).forEach(addedKey => {
     if (added[addedKey]) {
-      added[addedKey].forEach(addedData => {
+      const items = isArray(added[addedKey]) ? added[addedKey] : [added[addedKey]]
+      items.forEach(addedData => {
         try {
+          const existingData = lookup[addedData.id]
           const createNodeFunction = ADDED[addedKey][0]
           const treeFunction = ADDED[addedKey][1]
-          const node = createNodeFunction(addedData)
-          tree[treeFunction](node)
+          const node = createNodeFunction(existingData)
+          CylcTree[treeFunction](node, workflow, options)
         } catch (error) {
-          // eslint-disable-next-line no-console
-          console.error('Error applying added-delta, will continue processing the remaining data', error, addedData)
-          store.dispatch('setAlert', new AlertModel('Error applying added-delta, see browser console logs for more. Please reload your browser tab to retrieve the full flow state', null, 'error'))
+          result.errors.push([
+            'Error applying added-delta, see browser console logs for more. Please reload your browser tab to retrieve the full flow state',
+            error,
+            addedData,
+            workflow,
+            lookup
+          ])
         }
       })
     }
   })
+  return result
 }
 
 /**
@@ -117,59 +83,95 @@ const UPDATED = {
 }
 
 /**
- * @typedef {Object} DeltasUpdated
- * @property {Array<Object>} familyProxies
- * @property {Array<Object>} taskProxies
- * @property {Array<Object>} jobs
- */
-
-/**
  * Deltas updated.
  *
  * @param updated {DeltasUpdated} updated
- * @param {CylcTree} tree
+ * @param {Workflow} workflow
+ * @param {Lookup} lookup
+ * @param {*} options
  */
-function applyDeltasUpdated (updated, tree) {
+function applyDeltasUpdated (updated, workflow, lookup, options) {
+  const result = {
+    errors: []
+  }
   Object.keys(UPDATED).forEach(updatedKey => {
     if (updated[updatedKey]) {
       updated[updatedKey].forEach(updatedData => {
         try {
-          const updateNodeFunction = UPDATED[updatedKey][0]
-          const treeFunction = UPDATED[updatedKey][1]
-          const node = updateNodeFunction(updatedData)
-          tree[treeFunction](node)
+          const existingData = lookup[updatedData.id]
+          if (!existingData) {
+            result.errors.push([
+              `Updated node [${updatedData.id}] not found in workflow lookup`,
+              updatedData,
+              workflow,
+              lookup
+            ])
+          } else {
+            const updateNodeFunction = UPDATED[updatedKey][0]
+            const treeFunction = UPDATED[updatedKey][1]
+            const node = updateNodeFunction(existingData)
+            CylcTree[treeFunction](node, workflow, options)
+          }
         } catch (error) {
-          // eslint-disable-next-line no-console
-          console.error('Error applying updated-delta, will continue processing the remaining data', error, updatedData)
-          store.dispatch('setAlert', new AlertModel('Error applying updated-delta, see browser console logs for more. Please reload your browser tab to retrieve the full flow state', null, 'error'))
+          result.errors.push([
+            'Error applying added-delta, see browser console logs for more. Please reload your browser tab to retrieve the full flow state',
+            error,
+            updatedData,
+            workflow,
+            lookup
+          ])
         }
       })
     }
   })
+  return result
 }
 
 /**
- * @typedef {Object} Deltas
- * @property {string} id
- * @property {boolean} shutdown
- * @property {?DeltasAdded} added
- * @property {?DeltasUpdated} updated
- * @property {?DeltasPruned} pruned
+ * Helper object used to iterate pruned deltas data.
  */
+const PRUNED = {
+  jobs: 'removeJob',
+  taskProxies: 'removeTaskProxy',
+  familyProxies: 'removeFamilyProxy'
+}
 
 /**
- * Handle the initial data burst of deltas. Should create a tree given a workflow from the GraphQL
- * data. This tree contains the base structure to which the deltas are applied to.
+ * Deltas pruned.
  *
- * @param {Deltas} deltas - GraphQL deltas
- * @param {CylcTree} tree - Tree object backed by an array and a Map
+ * @param {DeltasPruned} pruned - deltas pruned
+ * @param {Workflow} workflow
+ * @param {Lookup} lookup
+ * @param {*} options
  */
-function handleInitialDataBurst (deltas, tree) {
-  const workflow = deltas.added.workflow
-  // A workflow (e.g. five) may not have any families as 'root' is filtered
-  workflow.familyProxies = workflow.familyProxies || []
-  populateTreeFromGraphQLData(tree, workflow)
-  tree.tallyCyclePointStates()
+function applyDeltasPruned (pruned, workflow, lookup, options) {
+  const result = {
+    errors: []
+  }
+  Object.keys(PRUNED).forEach(prunedKey => {
+    if (pruned[prunedKey]) {
+      for (const id of pruned[prunedKey]) {
+        try {
+          CylcTree[PRUNED[prunedKey]](id, workflow, options)
+        } catch (error) {
+          result.errors.push([
+            'Error applying pruned-delta, see browser console logs for more. Please reload your browser tab to retrieve the full flow state',
+            error,
+            prunedKey,
+            workflow,
+            lookup
+          ])
+        }
+      }
+    }
+  })
+  return result
+}
+
+const DELTAS = {
+  added: applyDeltasAdded,
+  updated: applyDeltasUpdated,
+  pruned: applyDeltasPruned
 }
 
 /**
@@ -181,71 +183,85 @@ function handleInitialDataBurst (deltas, tree) {
  * the first family from the top of the hierarchy in the deltas.
  *l
  * @param {Deltas} deltas - GraphQL deltas
- * @param {CylcTree} tree - Tree object backed by an array and a Map
+ * @param {Workflow} workflow - Tree object
+ * @param {Lookup} lookup
+ * @param {*} options
  */
-function handleDeltas (deltas, tree) {
-  if (deltas.pruned) {
-    applyDeltasPruned(deltas.pruned, tree)
-  }
-  if (deltas.added) {
-    applyDeltasAdded(deltas.added, tree)
-  }
-  if (deltas.updated) {
-    applyDeltasUpdated(deltas.updated, tree)
-  }
+function handleDeltas (deltas, workflow, lookup, options) {
+  const errors = []
+  Object.keys(DELTAS).forEach(key => {
+    if (deltas[key]) {
+      const handlingFunction = DELTAS[key]
+      const result = handlingFunction(deltas[key], workflow, lookup, options)
+      errors.push(...result.errors)
+    }
+  })
   // if added, removed, or updated deltas, we want to re-calculate the cycle point states now
   if (deltas.pruned || deltas.added || deltas.updated) {
-    tree.tallyCyclePointStates()
+    CylcTree.tallyCyclePointStates(workflow)
+  }
+  return {
+    errors
   }
 }
 
 /**
- * @param {?Deltas} deltas
- * @param {?CylcTree} tree
+ * @param {GraphQLResponseData} data
+ * @param {Workflow} workflow
+ * @param {Lookup} lookup
+ * @param {*} options
  */
-export function applyDeltas (deltas, tree) {
-  if (deltas && tree) {
-    // first we check whether it is a shutdown response
-    if (deltas.shutdown) {
-      tree.clear()
-      return
+export default function (data, workflow, lookup, options) {
+  const deltas = data.deltas
+  // first we check whether it is a shutdown response
+  if (deltas.shutdown) {
+    CylcTree.clear(workflow)
+    return {
+      errors: []
     }
-    if (tree.isEmpty()) {
-      // When the tree is null, we have two possible scenarios:
-      //   1. This means that we will receive our initial data burst in deltas.added.workflow
-      //      which we can use to create the tree structure.
-      //   2. Or this means that after the shutdown (when we delete the tree), we received a delta.
-      //      In this case we don't really have any way to fix the tree.
-      // In both cases, actually, the user has little that s/he could do, besides refreshing the
-      // page. So we fail silently and wait for a request with the initial data.
-      if (!deltas.added || !deltas.added.workflow) {
-        // eslint-disable-next-line no-console
-        console.error('Received a delta before the workflow initial data burst')
-        store.dispatch('setAlert', new AlertModel('Received a delta before the workflow initial data burst. Please reload your browser tab to retrieve the full flow state', null, 'error'))
-        return
-      }
-      try {
-        handleInitialDataBurst(deltas, tree)
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error('Error applying initial data burst for deltas', error, deltas)
-        store.dispatch('setAlert', new AlertModel('Error applying initial data burst for deltas. Please reload your browser tab to retrieve the full flow state', null, 'error'))
-        throw error
-      }
-    } else {
-      // the tree was created, and now the next messages should contain
-      // 1. new data added under deltas.added (but not in deltas.added.workflow)
-      // 2. data updated in deltas.updated
-      // 3. data pruned in deltas.pruned
-      try {
-        handleDeltas(deltas, tree)
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error('Unexpected error applying deltas', error, deltas)
-        throw error
+  }
+  // Safe check in case the tree is empty.
+  if (CylcTree.isEmpty(workflow)) {
+    // When the tree is empty, we have two possible scenarios:
+    //   1. This means that we will receive our initial data burst in deltas.added
+    //      which we can use to create the tree structure.
+    //   2. Or this means that after the shutdown (when we delete the tree), we received a delta.
+    //      In this case we don't really have any way to fix the tree.
+    // In both cases, actually, the user has little that s/he could do, besides refreshing the
+    // page. So we fail silently and wait for a request with the initial data.
+    //
+    // We need at least a deltas.added.workflow in the deltas data, since it is the root node.
+    if (!deltas.added || !deltas.added.workflow) {
+      return {
+        errors: [
+          [
+            'Received a delta before the workflow initial data burst',
+            deltas.added,
+            workflow,
+            lookup
+          ]
+        ]
       }
     }
-  } else {
-    throw Error('Workflow tree subscription did not return data.deltas')
+  }
+  // the tree was created, and now the next messages should contain
+  // 1. data added in deltas.added
+  // 2. data updated in deltas.updated
+  // 3. data pruned in deltas.pruned
+  // 4. a delta with some data, and the .shutdown flag telling us the workflow has stopped
+  try {
+    return handleDeltas(deltas, workflow, lookup, options)
+  } catch (error) {
+    return {
+      errors: [
+        [
+          'Unexpected error applying deltas',
+          error,
+          deltas,
+          workflow,
+          lookup
+        ]
+      ]
+    }
   }
 }

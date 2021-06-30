@@ -170,19 +170,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 </template>
 
 <script>
-import { mixin } from '@/mixins/index'
 import { mapState } from 'vuex'
+import { mdiBook, mdiBookMultiple, mdiBookOpenVariant, mdiCog, mdiHubspot, mdiTable } from '@mdi/js'
+import pageMixin from '@/mixins/index'
+import subscriptionViewMixin from '@/mixins/subscriptionView'
+import subscriptionComponentMixin from '@/mixins/subscriptionComponent'
 import { createUrl } from '@/utils/urls'
-import { DASHBOARD_QUERY } from '@/graphql/queries'
-import { mdiTable, mdiCog, mdiHubspot, mdiBook, mdiBookOpenVariant, mdiBookMultiple } from '@mdi/js'
 import WorkflowState from '@/model/WorkflowState.model'
-
-const QUERIES = {
-  root: DASHBOARD_QUERY
-}
+import SubscriptionQuery from '@/model/SubscriptionQuery.model'
+import { DASHBOARD_DELTAS_SUBSCRIPTION } from '@/graphql/queries'
 
 export default {
-  mixins: [mixin],
+  name: 'Dashboard',
+  mixins: [
+    pageMixin,
+    subscriptionComponentMixin,
+    subscriptionViewMixin
+  ],
   metaInfo () {
     return {
       title: this.getPageTitle('App.dashboard')
@@ -190,9 +194,13 @@ export default {
   },
   data () {
     return {
-      viewID: '',
-      subscriptions: {},
-      isLoading: true,
+      query: new SubscriptionQuery(
+        DASHBOARD_DELTAS_SUBSCRIPTION,
+        {},
+        'root',
+        ['workflows/applyWorkflowsDeltas'],
+        []
+      ),
       workflowsHeader: [
         {
           text: 'Count',
@@ -232,68 +240,20 @@ export default {
   computed: {
     ...mapState('workflows', ['workflows']),
     workflowsTable () {
-      const table = Object.fromEntries(WorkflowState.enumValues.map(state => [state.name, 0]))
-      for (const workflow of this.workflows) {
-        if (Object.prototype.hasOwnProperty.call(table, workflow.status)) {
-          table[workflow.status] += 1
-        }
-      }
-      return WorkflowState.enumValues.map(state => {
-        return {
-          text: state.name.charAt(0).toUpperCase() + state.name.slice(1),
-          count: table[state.name]
-        }
-      }).sort((left, right) => {
-        return left.text.localeCompare(right.text)
-      })
-    }
-  },
-  created () {
-    this.viewID = `Dashboard: ${Math.random()}`
-    this.$workflowService.register(
-      this,
-      {
-        activeCallback: this.setActive
-      }
-    )
-    this.subscribe('root')
-  },
-  beforeRouteLeave (to, from, next) {
-    this.$workflowService.unregister(this)
-    next()
-  },
-  methods: {
-    subscribe (queryName) {
-      /**
-       * Subscribe this view to a new GraphQL query.
-       * @param {string} queryName - Must be in QUERIES.
-       */
-      if (!(queryName in this.subscriptions)) {
-        this.subscriptions[queryName] =
-          this.$workflowService.subscribe(
-            this,
-            QUERIES[queryName].replace('WORKFLOW_ID', this.workflowName)
-          )
-      }
-    },
-
-    unsubscribe (queryName) {
-      /**
-       * Unsubscribe this view to a new GraphQL query.
-       * @param {string} queryName - Must be in QUERIES.
-       */
-      if (queryName in this.subscriptions) {
-        this.$workflowService.unsubscribe(
-          this.subscriptions[queryName]
-        )
-      }
-    },
-
-    setActive (isActive) {
-      /** Toggle the isLoading state.
-       * @param {bool} isActive - Are this views subs active.
-       */
-      this.isLoading = !isActive
+      const count = Object.values(this.workflows)
+        .map(workflow => workflow.status)
+        .reduce((acc, state) => {
+          acc[state] = (acc[state] || 0) + 1
+          return acc
+        }, {})
+      return WorkflowState.enumValues
+        .sort((left, right) => left.name.localeCompare(right.name))
+        .map(state => {
+          return {
+            text: state.name.charAt(0).toUpperCase() + state.name.slice(1),
+            count: count[state.name] || 0
+          }
+        })
     }
   }
 }

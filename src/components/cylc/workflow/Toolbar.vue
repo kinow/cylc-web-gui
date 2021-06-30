@@ -91,14 +91,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
           <v-list-item
             :id="`toolbar-add-${ view.name }-view`"
             v-for="view in views"
-            :key="view.title"
+            :key="view.name"
             @click="$listeners['add'](view.name)"
             class="py-0 px-8 ma-0 c-add-view"
           >
             <v-list-item-icon>
               <v-icon>{{ view.icon }}</v-icon>
             </v-list-item-icon>
-            <v-list-item-title>{{ view.title }}</v-list-item-title>
+            <v-list-item-title>{{ view.name }}</v-list-item-title>
           </v-list-item>
         </v-list>
       </v-menu>
@@ -123,10 +123,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 <script>
 import { mapGetters, mapState } from 'vuex'
-import toolbar from '@/mixins/toolbar'
-import WorkflowState from '@/model/WorkflowState.model'
 import {
   mdiAppleKeyboardCommand,
+  mdiBroadcast,
   mdiFileTree,
   mdiMicrosoftXboxControllerMenu,
   mdiPause,
@@ -135,6 +134,11 @@ import {
   mdiStop,
   mdiViewList
 } from '@mdi/js'
+import toolbar from '@/mixins/toolbar'
+import WorkflowState from '@/model/WorkflowState.model'
+import TreeView from '@/views/Tree'
+import MutationsView from '@/views/Mutations'
+import SubscriptionsView from '@/components/cylc/Subscriptions'
 
 import {
   mutationStatus
@@ -165,16 +169,17 @@ export default {
     },
     views: [
       {
-        name: 'tree',
-        title: 'Tree',
+        name: TreeView.name,
         icon: mdiFileTree
 
       },
       {
-        name: 'mutations',
-        title: 'Mutations',
+        name: MutationsView.name,
         icon: mdiAppleKeyboardCommand
-
+      },
+      {
+        name: SubscriptionsView.name,
+        icon: mdiBroadcast
       }
     ]
   }),

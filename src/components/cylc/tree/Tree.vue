@@ -156,12 +156,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 </template>
 
 <script>
-import TreeItem from '@/components/cylc/tree/TreeItem'
 import Vue from 'vue'
-import TaskState from '@/model/TaskState.model'
-import Task from '@/components/cylc/Task'
 import cloneDeep from 'lodash/cloneDeep'
 import { mdiPlus, mdiMinus } from '@mdi/js'
+import TaskState from '@/model/TaskState.model'
+import TreeItem from '@/components/cylc/tree/TreeItem'
+import Task from '@/components/cylc/Task'
 
 export default {
   name: 'Tree',
@@ -184,7 +184,7 @@ export default {
   },
   components: {
     Task,
-    'tree-item': TreeItem
+    TreeItem
   },
   data () {
     return {

@@ -1,3 +1,5 @@
+import { mapState } from 'vuex'
+
 /**
  * Copyright (C) NIWA & British Crown (Met Office) & Contributors.
  *
@@ -15,24 +17,37 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { mapActions, mapState } from 'vuex'
-/* eslint-disable no-unused-vars */
+// eslint-disable-next-line no-unused-vars
 import User from '@/model/User.model'
-/* eslint-enable no-unused-vars */
 
-const datatree = {
+/**
+ * A mixin that contains data used for a GraphQL subscription, such as the
+ * query variables.
+ *
+ * To be used in Views that are bound to VueRouter routes that contain the
+ * :workflowName prop.
+ */
+export default {
+  props: {
+    workflowName: {
+      type: String,
+      required: true
+    }
+  },
   computed: {
     /**
      * We use the user from the store to compute the workflow ID. The view
      * has only the workflow name from the Vue route. We then combine it
      * with the user name and the default divider '|' to create the workflow
      * ID.
+     *
      * @return {User}
      */
     ...mapState('user', ['user']),
     /**
      * Compute the workflow ID using the Vue route parameter
      * `workflowName` and the user from the store.
+     *
      * @return {string} - the Workflow ID used in this view
      */
     workflowId () {
@@ -40,30 +55,13 @@ const datatree = {
     },
     /**
      * GraphQL query variables.
+     *
      * @returns {{workflowId: string}}
      */
     variables () {
       return {
         workflowId: this.workflowId
       }
-    },
-    /**
-     * Return the workflow hierarchical tree.
-     * @return {Array} workflow tree
-     */
-    workflowTree () {
-      return this.tree ? this.tree.root.children : []
     }
-  },
-
-  methods: {
-    /**
-     * Create a UI alert.
-     */
-    ...mapActions(['setAlert'])
   }
-}
-
-export {
-  datatree
 }

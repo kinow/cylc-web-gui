@@ -25,9 +25,9 @@ import vuetify from './plugins/vuetify'
 
 // Application imports
 import App from './App'
-import i18n from '@/i18n'
-import router from '@/router'
-import store from '@/store'
+import i18n from '@/i18n/index'
+import router from '@/router/index'
+import store from '@/store/index'
 
 import mitt from 'mitt'
 

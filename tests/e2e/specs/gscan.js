@@ -53,7 +53,7 @@ describe('GScan component', () => {
     cy
       .get('[role="menu"]:visible')
       .find('.v-label')
-      .contains('expired')
+      .contains('failed')
       .click({ force: true })
     cy
       .get('.c-gscan-workflow')

@@ -193,23 +193,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 </template>
 
 <script>
-import { mapState, mapMutations } from 'vuex'
-import { mixin } from '@/mixins'
-import {
-  resetFontSize,
-  decreaseFontSize,
-  increaseFontSize,
-  getCurrentFontSize
-} from '@/utils/font-size'
-import { mdiCog, mdiFormatFontSizeIncrease, mdiFormatFontSizeDecrease } from '@mdi/js'
+import { mapMutations, mapState } from 'vuex'
+import pageMixin from '@/mixins'
+import { decreaseFontSize, getCurrentFontSize, increaseFontSize, resetFontSize } from '@/utils/font-size'
+import { mdiCog, mdiFormatFontSizeDecrease, mdiFormatFontSizeIncrease } from '@mdi/js'
 import Job from '@/components/cylc/Job'
 import JobState from '@/model/JobState.model'
-import CylcTree from '@/components/cylc/tree/cylc-tree'
+import * as CylcTree from '@/components/cylc/tree/index'
+import subscriptionViewMixin from '@/mixins/subscriptionView'
 
 // TODO: update where user preferences are stored after #335
 
 export default {
-  mixins: [mixin],
+  name: 'UserProfile',
+  mixins: [
+    pageMixin,
+    subscriptionViewMixin
+  ],
   components: {
     Job
   },

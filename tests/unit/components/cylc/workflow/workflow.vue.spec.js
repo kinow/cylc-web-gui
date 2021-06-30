@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { shallowMount } from '@vue/test-utils'
 import { expect } from 'chai'
+import { shallowMount } from '@vue/test-utils'
 import Lumino from '@/components/cylc/workflow/Lumino'
 
 describe('Workflow component', () => {

@@ -19,9 +19,9 @@ import { expect } from 'chai'
 import {
   TaskState,
   TaskStateUserOrder
-} from '@/model/TaskState.model.js'
+} from '@/model/TaskState.model'
 
-describe('TaskState', () => {
+describe('TaskState model', () => {
   describe('TaskStateUserOrder', () => {
     it('contains the same states as TaskState in a different order', () => {
       expect([...TaskState].sort()).to.deep.equal(TaskStateUserOrder.sort())

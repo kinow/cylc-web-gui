@@ -18,25 +18,43 @@
 import {
   createJobNode,
   getCyclePointId
-} from '@/components/cylc/tree/tree-nodes'
-import {
-  populateTreeFromGraphQLData
-} from '@/components/cylc/tree/index'
+} from '@/components/cylc/tree/nodes'
+import handleTreeDeltas from '@/components/cylc/tree/deltas'
+import handleWorkflowDeltas from '@/components/cylc/workflow/deltas'
 import { expect } from 'chai'
 import { sampleWorkflow1 } from './tree.data'
-import CylcTree from '@/components/cylc/tree/cylc-tree'
+import * as CylcTree from '@/components/cylc/tree/index'
 
 const CYCLEPOINT_TYPE = 'cyclepoint'
 const FAMILY_TYPE = 'family-proxy'
 const TASK_TYPE = 'task-proxy'
 
 describe('Tree component functions', () => {
-  const cylcTree = new CylcTree()
   let workflowTree
+  // workflow (that uses a tree and a lookup)
+  const workflow = {
+    tree: {},
+    lookup: {}
+  }
+  // global lookup
+  const lookup = {}
   before(() => {
-    cylcTree.clear()
-    populateTreeFromGraphQLData(cylcTree, sampleWorkflow1)
-    workflowTree = cylcTree.root.children
+    CylcTree.clear(workflow)
+    const options = {}
+    const initialDataBurstData = {
+      deltas: {
+        id: sampleWorkflow1.workflow.id,
+        shutdown: false,
+        added: sampleWorkflow1,
+        updated: {},
+        pruned: []
+      }
+    }
+    // populate the global lookup first
+    handleWorkflowDeltas(initialDataBurstData, lookup)
+    // then pass the lookup to the tree-deltas (it re-uses the data from the global lookup)
+    handleTreeDeltas(initialDataBurstData, workflow, lookup, options)
+    workflowTree = workflow.tree.children
   })
   it('should add cycle points as direct children of the workflow', () => {
     expect(workflowTree.length).to.equal(2)
@@ -53,20 +71,13 @@ describe('Tree component functions', () => {
     expect(children[2].type).to.equal(TASK_TYPE)
   })
   it('should add families as children to families correctly', () => {
-    const workflowTree = cylcTree.root.children
+    const workflowTree = workflow.tree.children
     const firstCyclePoint = workflowTree[0]
     const children = firstCyclePoint.children
     expect(children[1].type).to.equal(FAMILY_TYPE)
     expect(children[1].node.name).to.equal('GOOD')
     expect(children[1].children[0].type).to.equal(FAMILY_TYPE)
     expect(children[1].children[0].node.name).to.equal('SUCCEEDED')
-  })
-  it('should not throw an error when the workflow to be populated is invalid', () => {
-    const tree = {}
-    const workflow = {}
-    expect(populateTreeFromGraphQLData, null, workflow).to.not.throw(Error)
-    expect(populateTreeFromGraphQLData, tree, null).to.not.throw(Error)
-    expect(populateTreeFromGraphQLData, tree, workflow).to.not.throw(Error)
   })
   it('should extract the cycle point ID', () => {
     const tests = [
@@ -134,7 +145,7 @@ describe('Tree component functions', () => {
     })
   })
   it('should create custom outputs', () => {
-    const job = sampleWorkflow1.taskProxies[0].jobs[0]
+    const job = sampleWorkflow1.jobs[0]
     const jobNode = createJobNode(job)
     // The outputs in the GraphQL returned data (and in our test data) contains
     // 4 outputs, submitted, started, succeeded, and the out1 custom output.

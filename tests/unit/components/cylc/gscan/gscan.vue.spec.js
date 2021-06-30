@@ -17,13 +17,15 @@
 
 import { createLocalVue, mount, RouterLinkStub } from '@vue/test-utils'
 import { expect } from 'chai'
-import GScan from '@/components/cylc/gscan/GScan'
-import TreeItem from '@/components/cylc/tree/TreeItem'
+import Vue from 'vue'
+import Vuex from 'vuex'
+import Vuetify from 'vuetify'
 import { simpleWorkflowGscanNodes } from './gscan.data'
+import storeOptions from '@/store/options'
 import WorkflowState from '@/model/WorkflowState.model'
 import TaskState from '@/model/TaskState.model'
-import Vuetify from 'vuetify'
-import Vue from 'vue'
+import GScan from '@/components/cylc/gscan/GScan'
+import TreeItem from '@/components/cylc/tree/TreeItem'
 
 global.requestAnimationFrame = cb => cb()
 
@@ -40,12 +42,28 @@ localVue.prototype.$workflowService = {
     return true
   },
   unsubscribe: function () {
+  },
+  startDeltasSubscription: function () {
+    return {
+      unsubscribed: false,
+      unsubscribe () {
+        this.unsubscribed = true
+      }
+    }
   }
 }
 
 Vue.use(Vuetify)
+Vue.use(Vuex)
 
 describe('GScan component', () => {
+  const store = new Vuex.Store(storeOptions)
+  const resetState = () => {
+    store.commit('workflows/SET_WORKFLOWS', [])
+    store.commit('workflows/SET_WORKFLOW_NAME', null)
+  }
+  beforeEach(resetState)
+  afterEach(resetState)
   /**
    * @param options
    * @returns {Wrapper<GScan>}
@@ -55,6 +73,7 @@ describe('GScan component', () => {
     return mount(GScan, {
       localVue,
       vuetify,
+      store,
       stubs: {
         RouterLink: RouterLinkStub
       },
@@ -63,12 +82,9 @@ describe('GScan component', () => {
   }
   it('should display a skeleton loader if loading data', () => {
     const wrapper = mountFunction({
-      propsData: {
-        workflows: simpleWorkflowGscanNodes
-      },
-      data () {
-        return {
-          isLoading: true
+      computed: {
+        isLoading () {
+          return true
         }
       }
     })
@@ -77,44 +93,11 @@ describe('GScan component', () => {
     expect(isBusy).to.equal('true')
   })
   it('should display the GScan with valid data', () => {
-    const wrapper = mountFunction({
-      propsData: {
-        workflows: simpleWorkflowGscanNodes
-      },
-      data () {
-        return {
-          isLoading: false
-        }
-      }
-    })
-    expect(wrapper.props().workflows[0].name).to.equal('five')
+    store.commit('workflows/SET_WORKFLOWS', simpleWorkflowGscanNodes)
+    const wrapper = mountFunction({})
+    expect(wrapper.vm.workflows[0].name).to.equal('five')
     expect(wrapper.find('div')).to.not.equal(null)
     expect(wrapper.html()).to.contain('five')
-  })
-  it('should set loading state', () => {
-    const wrapper = mountFunction({
-      propsData: {
-        workflows: simpleWorkflowGscanNodes
-      },
-      data () {
-        return {
-          isLoading: false
-        }
-      }
-    })
-    expect(wrapper.vm.isLoading).to.equal(false)
-    wrapper.vm.setActive(false)
-    expect(wrapper.vm.isLoading).to.equal(true)
-  })
-  it('should unregister before being destroyed', () => {
-    const wrapper = mountFunction({
-      propsData: {
-        workflows: []
-      }
-    })
-    expect(wrapper.vm.subscriptions.root).to.equal(true)
-    wrapper.vm.$destroy()
-    expect(wrapper.vm.subscriptions.root).to.equal(undefined)
   })
   describe('Sorting', () => {
     const createWorkflows = (namesAndStatuses) => {
@@ -214,16 +197,8 @@ describe('GScan component', () => {
         }
       ]
       tests.forEach(test => {
-        const wrapper = mountFunction({
-          propsData: {
-            workflows: test.workflows
-          },
-          data () {
-            return {
-              isLoading: false
-            }
-          }
-        })
+        store.commit('workflows/SET_WORKFLOWS', test.workflows)
+        const wrapper = mountFunction()
         const workflowsElements = wrapper.findAllComponents(TreeItem)
         expect(workflowsElements.length).to.equal(test.expected.length)
         for (let i = 0; i < test.expected.length; i++) {
@@ -279,11 +254,8 @@ describe('GScan component', () => {
       ]
     }
     it('should have a default state of no name filter, and all states enabled', () => {
-      const wrapper = mountFunction({
-        propsData: {
-          workflows
-        }
-      })
+      store.commit('workflows/SET_WORKFLOWS', workflows)
+      const wrapper = mountFunction({})
       // read: give me all the workflows in RUNNING/PAUSED/STOPPED, no
       //       matter their names or their tasks' states.
       // no workflow name filtered initially
@@ -300,11 +272,8 @@ describe('GScan component', () => {
       expect(wrapper.vm.filteredWorkflows.length).to.equal(2)
     })
     it('should not filter by name, nor by tasks state by default, but should include all workflow states', () => {
-      const wrapper = mountFunction({
-        propsData: {
-          workflows
-        }
-      })
+      store.commit('workflows/SET_WORKFLOWS', workflows)
+      const wrapper = mountFunction({})
       wrapper.vm.filterWorkflows(
         wrapper.vm.workflows,
         wrapper.vm.searchWorkflows,
@@ -334,11 +303,8 @@ describe('GScan component', () => {
           }
         ]
         tests.forEach(test => {
-          const wrapper = mountFunction({
-            propsData: {
-              workflows
-            }
-          })
+          store.commit('workflows/SET_WORKFLOWS', workflows)
+          const wrapper = mountFunction({})
           expect(wrapper.vm.filteredWorkflows.length).to.equal(2)
           wrapper.vm.filterWorkflows(wrapper.vm.workflows, test.searchWorkflow, wrapper.vm.filters)
           expect(wrapper.vm.filteredWorkflows.length).to.equal(test.expected)
@@ -377,11 +343,8 @@ describe('GScan component', () => {
               }
               return Object.assign({}, state, { model: false })
             })
-          const wrapper = mountFunction({
-            propsData: {
-              workflows
-            }
-          })
+          store.commit('workflows/SET_WORKFLOWS', workflows)
+          const wrapper = mountFunction({})
           const filters = createStatesFilters(workflowStates, initialWorkflowTaskStates)
           wrapper.vm.filterWorkflows(wrapper.vm.workflows, '', filters)
           expect(wrapper.vm.filteredWorkflows.length).to.equal(test.expected)
@@ -420,11 +383,8 @@ describe('GScan component', () => {
               }
               return Object.assign({}, state, { model: false })
             })
-          const wrapper = mountFunction({
-            propsData: {
-              workflows
-            }
-          })
+          store.commit('workflows/SET_WORKFLOWS', workflows)
+          const wrapper = mountFunction({})
           const filters = createStatesFilters(initialWorkflowStates, workflowTaskStates)
           wrapper.vm.filterWorkflows(wrapper.vm.workflows, '', filters)
           expect(wrapper.vm.filteredWorkflows.length).to.equal(test.expected)
@@ -483,60 +443,6 @@ describe('GScan component', () => {
       ]
       GScan.methods.toggleItemsValues(items)
       expect(!items.every(item => item.model))
-    })
-  })
-  describe('GraphQL subscription', () => {
-    describe('Subscribe', () => {
-      it('should subscribe a new query', () => {
-        const wrapper = mountFunction({
-          propsData: {
-            workflows: []
-          }
-        })
-        // the root query is registered on creation; we also cannot use another query
-        // as the query must exist in the QUERIES global variable...
-        delete wrapper.vm.subscriptions.root
-        expect(wrapper.vm.subscriptions.root).to.equal(undefined)
-        wrapper.vm.subscribe('root')
-        // true because our mocked service returns true; see implementation at the top of this file
-        expect(wrapper.vm.subscriptions.root).to.equal(true)
-      })
-      it('should subscribe a new query once', () => {
-        const wrapper = mountFunction({
-          propsData: {
-            workflows: []
-          }
-        })
-        // force-define the value here
-        wrapper.vm.subscriptions.root = false
-        // normally subscribe would store the result of the $workflowService.subscribe, but it won't
-        // as we have already force-defined it in the line above
-        wrapper.vm.subscribe('root')
-        // true because our mocked service returns true; see implementation at the top of this file
-        expect(wrapper.vm.subscriptions.root).to.equal(false)
-      })
-    })
-    describe('Unsubscribe', () => {
-      it('should unsubscribe an existing query', () => {
-        const wrapper = mountFunction({
-          propsData: {
-            workflows: []
-          }
-        })
-        const queryName = 'root'
-        // let's unsubscribe the root query, subscribed on creation (created method)
-        wrapper.vm.unsubscribe(queryName)
-        expect(wrapper.vm.subscriptions.root).to.equal(undefined)
-      })
-      it('should do nothing if the query was not subscribed', () => {
-        const wrapper = mountFunction({
-          propsData: {
-            workflows: []
-          }
-        })
-        wrapper.vm.unsubscribe('cylc')
-        expect(wrapper.vm.subscriptions.root).to.equal(true)
-      })
     })
   })
 })

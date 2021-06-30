@@ -16,7 +16,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
 <template>
-  <v-icon>{{ getIcon() }}</v-icon>
+  <v-tooltip right>
+    <template v-slot:activator="{ on, attrs }">
+      <v-icon
+        v-bind="attrs"
+        v-on="on"
+      >
+        {{ getIcon() }}
+      </v-icon>
+    </template>
+    <span>{{ status }}</span>
+  </v-tooltip>
 </template>
 
 <script>
@@ -42,9 +52,13 @@ export default {
      * @returns {String} - status, one of the WorkflowState enum values
      */
     getIcon () {
-      return (
-        WorkflowState.enumValueOf(this.status.toUpperCase()) ||
-        WorkflowState.ERROR).icon
+      // TBD: enumValueOf returned the wrong value?
+      const state = [...WorkflowState.enumValues]
+        .find(state => state.name === this.status)
+      if (!state || state.length === 0) {
+        return WorkflowState.ERROR.icon
+      }
+      return state.icon
     }
   }
 }

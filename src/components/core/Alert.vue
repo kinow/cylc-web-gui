@@ -27,15 +27,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
       light
       colored-border
     >
+      <template v-slot:close="props">
+        <v-icon @click="closeAlert(props.toggle)">{{ svgPaths.close }}</v-icon>
+      </template>
       {{ alert.getText() }}
     </v-alert>
   </div>
 </template>
 
 <script>
-import {
-  mapState
-} from 'vuex'
+import { mdiClose } from '@mdi/js'
+import { mapActions, mapState } from 'vuex'
 
 export default {
   name: 'Alert',
@@ -47,7 +49,10 @@ export default {
         ['error', 'red'],
         ['success', 'green'],
         ['warning', 'amber']
-      ])
+      ]),
+      svgPaths: {
+        close: mdiClose
+      }
     }
   },
 
@@ -56,8 +61,19 @@ export default {
   },
 
   methods: {
+    ...mapActions(['setAlert']),
     getColor (type) {
       return this.colors.get(type) || ''
+    },
+    /**
+     * Dismisses the alert from the UI, also removing it from the Vuex store.
+     *
+     * @param {Function} toggleFunction - the original Vuetify toggle function
+     * @see https://vuetifyjs.com/en/api/v-alert/
+     */
+    closeAlert (toggleFunction) {
+      this.setAlert(null)
+      toggleFunction()
     }
   }
 }

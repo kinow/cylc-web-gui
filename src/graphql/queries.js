@@ -24,6 +24,92 @@ import { DocumentNode } from 'graphql'
 // IMPORTANT: queries here may be used in the offline mode to create mock data. Before removing or renaming
 // queries here, please check under the services/mock folder for occurrences of the variable name.
 
+const WORKFLOW_DATA_FRAGMENT = `
+fragment WorkflowData on Workflow {
+  id
+  name
+  status
+  owner
+  host
+  port
+  stateTotals
+  latestStateTasks(states: [
+    "failed",
+    "preparing",
+    "submit-failed",
+    "submitted",
+    "running"
+  ])
+}
+`
+
+const CYCLEPOINT_DATA_FRAGMENT = `
+fragment CyclePointData on FamilyProxy {
+  id
+  cyclePoint
+}
+`
+
+const FAMILY_PROXY_DATA_FRAGMENT = `
+fragment FamilyProxyData on FamilyProxy {
+  id
+  name
+  state
+  cyclePoint
+  firstParent {
+    id
+    name
+    cyclePoint
+    state
+  }
+}
+`
+
+const TASK_PROXY_DATA_FRAGMENT = `
+fragment TaskProxyData on TaskProxy {
+  id
+  name
+  state
+  isHeld
+  isQueued
+  isRunahead
+  cyclePoint
+  firstParent {
+    id
+    name
+    cyclePoint
+    state
+  }
+  task {
+    meanElapsedTime
+    name
+  }
+}
+`
+
+const JOB_DATA_FRAGMENT = `
+fragment JobData on Job {
+  id
+  firstParent: taskProxy {
+    id
+  }
+  jobRunnerName
+  jobId
+  platform
+  startedTime
+  submittedTime
+  finishedTime
+  state
+  submitNum
+  taskProxy {
+    outputs (satisfied: true, sort: { keys: ["time"], reverse: true}) {
+      label
+      message
+    }
+  }
+}
+`
+
 /**
  * @type {DocumentNode}
  */
@@ -53,18 +139,6 @@ fragment WorkflowTreeDeltas on Deltas {
 fragment WorkflowTreeAddedData on Added {
   workflow {
     ...WorkflowData
-    cyclePoints: familyProxies (ids: ["root"], ghosts: true) {
-      ...CyclePointData
-    }
-    taskProxies (sort: { keys: ["name"], reverse: false }, ghosts: true) {
-      ...TaskProxyData
-      jobs(sort: { keys: ["submit_num"], reverse:true }) {
-        ...JobData
-      }
-    }
-    familyProxies (exids: ["root"], sort: { keys: ["name"] }, ghosts: true) {
-      ...FamilyProxyData
-    }
   }
   cyclePoints: familyProxies (ids: ["root"], ghosts: true) {
     ...CyclePointData
@@ -72,7 +146,7 @@ fragment WorkflowTreeAddedData on Added {
   familyProxies (exids: ["root"], sort: { keys: ["name"] }, ghosts: true) {
     ...FamilyProxyData
   }
-  taskProxies (sort: { keys: ["name"], reverse: false }, ghosts: true) {
+  taskProxies (sort: { keys: ["cyclePoint"], reverse: false }, ghosts: true) {
     ...TaskProxyData
   }
   jobs (sort: { keys: ["submit_num"], reverse:true }) {
@@ -102,135 +176,125 @@ fragment WorkflowTreePrunedData on Pruned {
 
 # WORKFLOW DATA BEGIN
 
-fragment WorkflowData on Workflow {
-  id
-  name
-  status
-  owner
-  host
-  port
-}
+${WORKFLOW_DATA_FRAGMENT}
 
-fragment CyclePointData on FamilyProxy {
-  id
-  cyclePoint
-}
+${CYCLEPOINT_DATA_FRAGMENT}
 
-fragment FamilyProxyData on FamilyProxy {
-  id
-  name
-  state
-  cyclePoint
-  firstParent {
-    id
-    name
-    cyclePoint
-    state
-  }
-}
+${FAMILY_PROXY_DATA_FRAGMENT}
 
-fragment TaskProxyData on TaskProxy {
-  id
-  name
-  state
-  isHeld
-  isQueued
-  isRunahead
-  cyclePoint
-  firstParent {
-    id
-    name
-    cyclePoint
-    state
-  }
-  task {
-    meanElapsedTime
-    name
-  }
-}
+${TASK_PROXY_DATA_FRAGMENT}
 
-fragment JobData on Job {
-  id
-  firstParent: taskProxy {
-    id
-  }
-  jobRunnerName
-  jobId
-  platform
-  startedTime
-  submittedTime
-  finishedTime
-  state
-  submitNum
-  taskProxy {
-    outputs (satisfied: true, sort: { keys: ["time"], reverse: true}) {
-      label
-      message
-    }
-  }
-}
+${JOB_DATA_FRAGMENT}
 
 # WORKFLOW DATA END
 `
 
 /**
- * Query used to retrieve data for the application Dashboard.
- * @type {string}
- */
-const DASHBOARD_QUERY = `
-subscription DashboardSubscriptionQuery {
-  workflows {
-    id
-    name
-    status
-  }
-}
-`
-
-/**
  * Query used to retrieve data for the GScan sidebar.
- * @type {string}
+ * @type {DocumentNode}
  */
-const GSCAN_QUERY = `
+const GSCAN_DELTAS_SUBSCRIPTION = gql`
 subscription GscanSubscriptionQuery {
-  workflows {
-    id
-    name
-    status
-    owner
-    host
-    port
-    stateTotals
-    latestStateTasks(states: [
-      "failed",
-      "preparing",
-      "submit-failed",
-      "submitted",
-      "running"
-    ])
+  deltas (stripNull: true) {
+    ...GScanTreeDeltas
   }
 }
+
+# GSCAN DELTAS BEGIN
+
+fragment GScanTreeDeltas on Deltas {
+  id
+  shutdown
+  added {
+    ...GscanAddedData
+  }
+  updated {
+    ...GscanUpdatedData
+  }
+  pruned {
+    workflow
+  }
+}
+
+fragment GscanAddedData on Added {
+  workflow {
+    ...WorkflowData
+  }
+}
+
+fragment GscanUpdatedData on Updated {
+  workflow {
+    ...WorkflowData
+  }
+}
+
+${WORKFLOW_DATA_FRAGMENT}
 `
 
 /**
- * Subscription used in the view that lists workflows in a table.
- * @type {string}
+ * Query used to retrieve data for the Dashboard view. Note that this query will
+ * likely change, bringing more information for the dashboards, and/or allowing
+ * users to customize the query.
+ *
+ * @type {DocumentNode}
+ * @see https://github.com/cylc/cylc-ui/issues/94
  */
-const WORKFLOWS_TABLE_QUERY = `
-subscription WorkflowsTableQuery {
-  workflows (ignoreInterval: 0) {
+const DASHBOARD_DELTAS_SUBSCRIPTION = gql`
+subscription DashboardSubscriptionQuery {
+  deltas (stripNull: true) {
     id
-    name
-    owner
-    host
-    port
+    shutdown
+    added {
+      workflow {
+        ...WorkflowData
+      }
+    }
+    updated {
+      workflow {
+        ...WorkflowData
+      }
+    }
+    pruned {
+      workflow
+    }
   }
 }
+
+${WORKFLOW_DATA_FRAGMENT}
+`
+
+/**
+ * Query used to retrieve data for the WorkflowsTable view.
+ *
+ * @type {DocumentNode}
+ */
+const WORKFLOWS_TABLE_DELTAS_SUBSCRIPTION = gql`
+subscription WorkflowsTableQuery {
+  deltas (stripNull: true) {
+    id
+    shutdown
+    added {
+      workflow {
+        ...WorkflowData
+      }
+    }
+    updated {
+      workflow {
+        ...WorkflowData
+      }
+    }
+    pruned {
+      workflow
+    }
+  }
+}
+
+${WORKFLOW_DATA_FRAGMENT}
 `
 
 export {
   WORKFLOW_TREE_DELTAS_SUBSCRIPTION,
-  DASHBOARD_QUERY,
-  GSCAN_QUERY,
-  WORKFLOWS_TABLE_QUERY
+  GSCAN_DELTAS_SUBSCRIPTION,
+  DASHBOARD_DELTAS_SUBSCRIPTION,
+  WORKFLOWS_TABLE_DELTAS_SUBSCRIPTION
 }

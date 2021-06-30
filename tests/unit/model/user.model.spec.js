@@ -16,9 +16,9 @@
  */
 
 import { expect } from 'chai'
-import User from '@/model/User.model.js'
+import User from '@/model/User.model'
 
-describe('UserModel', () => {
+describe('User model', () => {
   describe('constructor', () => {
     it('should be created', () => {
       const name = 'john.foe'

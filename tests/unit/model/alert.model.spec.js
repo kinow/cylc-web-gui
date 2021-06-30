@@ -17,9 +17,9 @@
 
 import { expect } from 'chai'
 import sinon from 'sinon'
-import Alert from '@/model/Alert.model.js'
+import Alert from '@/model/Alert.model'
 
-describe('AlertModel', () => {
+describe('Alert model', () => {
   beforeEach(() => {
     sinon.stub(console, 'log')
   })

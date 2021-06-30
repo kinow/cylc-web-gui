@@ -15,10 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import User from '@/model/User.model'
 import axios from 'axios'
-import store from '@/store/'
-import Alert from '@/model/Alert.model'
+import User from '@/model/User.model'
 import { createUrl } from '@/utils/urls'
 
 class UserService {
@@ -28,11 +26,7 @@ class UserService {
    */
   getUserProfile () {
     return axios.get(createUrl('userprofile')).then((response) => {
-      const user = new User(response.data.name, response.data.groups, response.data.created, response.data.admin, response.data.server)
-      return store.dispatch('user/setUser', user)
-    }).catch((error) => {
-      const alert = new Alert(error.response.statusText, null, 'error')
-      return store.dispatch('setAlert', alert)
+      return new User(response.data.name, response.data.groups, response.data.created, response.data.admin, response.data.server)
     })
   }
 }

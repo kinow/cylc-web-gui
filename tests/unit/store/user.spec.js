@@ -16,12 +16,17 @@
  */
 
 import { expect } from 'chai'
-import store from '@/store'
+import Vue from 'vue'
+import Vuex from 'vuex'
+import storeOptions from '@/store/options'
+
+Vue.use(Vuex)
 
 /**
  * Tests for the store/user module.
  */
 describe('user', () => {
+  const store = new Vuex.Store(storeOptions)
   /**
    * Tests for store.user.
    */

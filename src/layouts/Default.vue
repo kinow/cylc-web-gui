@@ -33,13 +33,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 </template>
 
 <script>
+import { mapState } from 'vuex'
+import store from '@/store/index'
+import AlertModel from '@/model/Alert.model'
 import Alert from '@/components/core/Alert'
 import Drawer from '@/components/cylc/Drawer'
 import Toolbar from '@/components/cylc/Toolbar'
 import ConnectionStatus from '@/components/cylc/ConnectionStatus'
-import { mapState } from 'vuex'
-import store from '@/store/'
-import AlertModel from '@/model/Alert.model'
 
 export default {
   name: 'Default',

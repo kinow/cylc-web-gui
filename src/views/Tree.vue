@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     <CylcObjectMenu />
     <div class="c-tree">
       <tree-component
-        :workflows="workflowTree"
+        :workflows="workflows"
         :hoverable="false"
         :activable="false"
         :multiple-active="false"
@@ -33,109 +33,57 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 </template>
 
 <script>
-import { mixin } from '@/mixins'
-import { datatree } from '@/mixins/treeview'
-import TreeComponent from '@/components/cylc/tree/Tree.vue'
-import CylcTree from '@/components/cylc/tree/cylc-tree'
-import { WORKFLOW_TREE_DELTAS_SUBSCRIPTION } from '@/graphql/queries'
-import Alert from '@/model/Alert.model'
-import { applyDeltas } from '@/components/cylc/tree/deltas'
+import { mapState } from 'vuex'
+import pageMixin from '@/mixins/index'
+import graphqlMixin from '@/mixins/graphql'
+import subscriptionViewMixin from '@/mixins/subscriptionView'
+import subscriptionComponentMixin from '@/mixins/subscriptionComponent'
+import SubscriptionQuery from '@/model/SubscriptionQuery.model'
+import TreeComponent from '@/components/cylc/tree/Tree'
 import CylcObjectMenu from '@/components/cylc/cylcObject/Menu'
+import { WORKFLOW_TREE_DELTAS_SUBSCRIPTION } from '@/graphql/queries'
 
 export default {
   mixins: [
-    mixin,
-    datatree
+    pageMixin,
+    graphqlMixin,
+    subscriptionComponentMixin,
+    subscriptionViewMixin
   ],
-
   name: 'Tree',
-
-  props: {
-    workflowName: {
-      type: String,
-      required: true
-    }
-  },
-
   components: {
     CylcObjectMenu,
     TreeComponent
   },
-
   metaInfo () {
     return {
       title: this.getPageTitle('App.workflow', { name: this.workflowName })
     }
   },
-
-  data: () => ({
-    /**
-     * This is the CylcTree, which contains the hierarchical tree data structure.
-     * It is created from the GraphQL data, with the only difference that this one
-     * contains hierarchy, while the GraphQL is flat-ish.
-     * @type {null|CylcTree}
-     */
-    tree: new CylcTree(null, {
-      cyclePointsOrderDesc: localStorage.cyclePointsOrderDesc ? JSON.parse(localStorage.cyclePointsOrderDesc) : CylcTree.DEFAULT_CYCLE_POINTS_ORDER_DESC
-    })
-  }),
-
-  /**
-   * Called when the user enters the view. This is executed before the component is fully
-   * created. So there is no direct access to things like `.data` or `.computed` properties.
-   * The component also hasn't been bound to the DOM (i.e. before `mounted()`).
-   *
-   * Here is where we create the subscription that populates the `CylcTree` object, and
-   * also applies the deltas whenever data is received from the backend.
-   */
-  beforeRouteEnter (to, from, next) {
-    next(vm => {
-      vm
-        .$workflowService
-        .startDeltasSubscription(WORKFLOW_TREE_DELTAS_SUBSCRIPTION, vm.variables, {
-          next: function next (response) {
-            applyDeltas(response.data.deltas, vm.tree)
-          },
-          error: function error (err) {
-            vm.setAlert(new Alert(err.message, null, 'error'))
-          }
-        })
-    })
-  },
-
-  /**
-   * Called when the user updates the view's route (e.g. changes URL parameters). We
-   * stop any active subscription and clear data structures used locally. We also
-   * start a new subscription.
-   */
-  beforeRouteUpdate (to, from, next) {
-    this.$workflowService.stopDeltasSubscription()
-    this.tree.clear()
-    const vm = this
-    // NOTE: this must be done in the nextTick so that vm.variables will use the updated prop!
-    this.$nextTick(() => {
-      vm
-        .$workflowService
-        .startDeltasSubscription(WORKFLOW_TREE_DELTAS_SUBSCRIPTION, vm.variables, {
-          next: function next (response) {
-            applyDeltas(response.data.deltas, vm.tree)
-          },
-          error: function error (err) {
-            vm.setAlert(new Alert(err.message, null, 'error'))
-          }
-        })
-    })
-    next()
-  },
-
-  /**
-   * Called when the user leaves the view. We stop the active subscription and clear
-   * data structures used locally.
-   */
-  beforeRouteLeave (to, from, next) {
-    this.$workflowService.stopDeltasSubscription()
-    this.tree = null
-    next()
+  computed: {
+    ...mapState('workflows', ['workflow']),
+    workflows () {
+      return this.workflow &&
+        this.workflow.tree &&
+        this.workflow.tree.children
+        ? this.workflow.tree.children
+        : []
+    },
+    query () {
+      return new SubscriptionQuery(
+        WORKFLOW_TREE_DELTAS_SUBSCRIPTION,
+        this.variables,
+        'workflow',
+        [
+          'workflows/applyWorkflowDeltas',
+          'workflows/applyTreeDeltas'
+        ],
+        [
+          'workflows/clearWorkflow',
+          'workflows/clearTree'
+        ]
+      )
+    }
   }
 }
 </script>

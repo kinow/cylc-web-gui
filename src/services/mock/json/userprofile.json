@@ -1,12 +1,10 @@
 {
-  "userprofile": {
-    "name": "cylc",
-    "groups": [
-      "cylc",
-      "developer"
-    ],
-    "created": "2021-03-23T23:26:23.606Z",
-    "admin": true,
-    "server": "/user/cylc/"
-  }
+  "name": "cylc",
+  "groups": [
+    "cylc",
+    "developer"
+  ],
+  "created": "2021-03-23T23:26:23.606Z",
+  "admin": true,
+  "server": "/user/cylc/"
 }

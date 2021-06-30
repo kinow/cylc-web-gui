@@ -163,8 +163,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import Task from '@/components/cylc/Task'
 import Job from '@/components/cylc/Job'
 import { TaskStateUserOrder } from '@/model/TaskState.model'
+import subscriptionViewMixin from '@/mixins/subscriptionView'
 
 export default {
+  name: 'Guide',
+  mixins: [subscriptionViewMixin],
   components: {
     task: Task,
     job: Job
