@@ -195,7 +195,7 @@ import subscriptionComponentMixin from '@/mixins/subscriptionComponent'
 import JobState from '@/model/JobState.model'
 import TaskState from '@/model/TaskState.model'
 import SubscriptionQuery from '@/model/SubscriptionQuery.model'
-import WorkflowState from '@/model/WorkflowState.model'
+import { WorkflowState, WorkflowStateOrder } from '@/model/WorkflowState.model'
 import Job from '@/components/cylc/Job'
 import Tree from '@/components/cylc/tree/Tree'
 import WorkflowIcon from '@/components/cylc/gscan/WorkflowIcon'
@@ -316,11 +316,12 @@ export default {
      * (natural sort).
      */
     sortedWorkflows () {
+      const workflowStateOrder = WorkflowStateOrder.map(state => state.name)
       return [...this.filteredWorkflows].sort((left, right) => {
         if (left.status !== right.status) {
-          const leftState = WorkflowState.enumValueOf(left.status.toUpperCase())
-          const rightState = WorkflowState.enumValueOf(right.status.toUpperCase())
-          return leftState.enumOrdinal - rightState.enumOrdinal
+          const leftState = left.status
+          const rightState = right.status
+          return workflowStateOrder.indexOf(leftState) - workflowStateOrder.indexOf(rightState)
         }
         return left.name
           .localeCompare(

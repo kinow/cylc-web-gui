@@ -29,8 +29,7 @@ import {
 /**
  * Cylc valid workflow states.
  */
-class WorkflowState extends Enumify {
-  // NOTE: the order the enum values are created here is used in the UI for sorting
+export class WorkflowState extends Enumify {
   static RUNNING = new WorkflowState('running', mdiPlayCircle)
   static PAUSED = new WorkflowState('paused', mdiPauseCircle)
   static STOPPING = new WorkflowState('stopping', mdiSkipNextCircle)
@@ -50,5 +49,17 @@ class WorkflowState extends Enumify {
     this.icon = icon
   }
 }
+
+/**
+ * Workflow states ordered for display purposes.
+ */
+export const WorkflowStateOrder = [
+  WorkflowState.RUNNING,
+  WorkflowState.PAUSED,
+  WorkflowState.STOPPING,
+  WorkflowState.STOPPED,
+  WorkflowState.INSTALLED,
+  WorkflowState.ERROR
+]
 
 export default WorkflowState
