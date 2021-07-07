@@ -108,7 +108,6 @@ const DELTAS = {
  * @param deltas
  * @param table
  * @param {Lookup} lookup
- * @returns {{errors: *[]}}
  */
 function handleDeltas (deltas, table, lookup) {
   const errors = []
