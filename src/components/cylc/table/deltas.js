@@ -16,66 +16,155 @@
  */
 
 import { mergeWith } from 'lodash'
-import { mergeWithCustomizer } from '@/utils/merge'
 import Vue from 'vue'
+import WorkflowState from '@/model/WorkflowState.model'
+import { mergeWithCustomizer } from '@/utils/merge'
+
+function applyDeltasAdded (added, table, lookup) {
+  const result = {
+    errors: []
+  }
+  if (added.taskProxies) {
+    for (const taskProxy of added.taskProxies) {
+      if (!table[taskProxy.id]) {
+        const tableEntry = {
+          id: taskProxy.id,
+          node: lookup[taskProxy.id],
+          latestJob: {}
+        }
+        Vue.set(table, taskProxy.id, tableEntry)
+      }
+    }
+  }
+  if (added.jobs) {
+    for (const job of added.jobs) {
+      const existingEntry = table[job.firstParent.id]
+      if (existingEntry) {
+        const latestJobSubmitNum = existingEntry.latestJob.submitNum || 0
+        const latestJob = latestJobSubmitNum < job.submitNum
+          ? lookup[job.id]
+          : existingEntry.latestJob
+        Vue.set(existingEntry, 'latestJob', latestJob)
+      }
+    }
+  }
+  return result
+}
+
+function applyDeltasUpdated (updated, table, lookup) {
+  const result = {
+    errors: []
+  }
+  if (updated.taskProxies) {
+    for (const taskProxy of updated.taskProxies) {
+      if (table[taskProxy.id]) {
+        mergeWith(table[taskProxy.id].node, taskProxy, mergeWithCustomizer)
+      }
+    }
+  }
+  if (updated.jobs) {
+    for (const job of updated.jobs) {
+      if (job.firstParent && job.firstParent.id) {
+        const existingTask = table[job.firstParent.id]
+        if (existingTask && existingTask.latestJob.id === job.id) {
+          mergeWith(existingTask.latestJob, job, mergeWithCustomizer)
+        }
+      }
+    }
+  }
+  return result
+}
+
+function applyDeltasPruned (pruned, table, lookup) {
+  const result = {
+    errors: []
+  }
+  if (pruned.taskProxies) {
+    pruned.taskProxies.forEach(taskProxyId => {
+      Vue.delete(table, taskProxyId)
+    })
+  }
+  if (pruned.jobs) {
+    pruned.jobs.forEach(jobId => {
+      const existingJob = lookup[jobId]
+      if (existingJob) {
+        const existingEntry = table[existingJob.firstParent.id]
+        if (existingEntry && existingEntry.latestJob.id === jobId) {
+          Vue.set(existingEntry, 'latestJob', {})
+        }
+      }
+    })
+  }
+  return result
+}
+
+const DELTAS = {
+  added: applyDeltasAdded,
+  updated: applyDeltasUpdated,
+  pruned: applyDeltasPruned
+}
 
 /**
- * @param {Deltas} data
- * @param {Object} tasks
+ * @param deltas
+ * @param table
+ * @param {Lookup} lookup
+ * @returns {{errors: *[]}}
  */
-export const applyTableDeltas = (data, tasks) => {
-  const added = data.added
-  const pruned = data.pruned
-  const updated = data.updated
-  if (added && added.workflow) {
-    if (added.workflow.taskProxies) {
-      for (const taskProxy of added.workflow.taskProxies) {
-        if (!tasks[taskProxy.id]) {
-          Vue.set(tasks, taskProxy.id, taskProxy)
-        }
-      }
+function handleDeltas (deltas, table, lookup) {
+  const errors = []
+  Object.keys(DELTAS).forEach(key => {
+    if (deltas[key]) {
+      const handlingFunction = DELTAS[key]
+      const result = handlingFunction(deltas[key], table, lookup)
+      errors.push(...result.errors)
     }
-    if (added.workflow.jobs) {
-      for (const job of added.workflow.jobs) {
-        const existingTask = tasks[job.firstParent.id]
-        if (existingTask) {
-          const children = existingTask.children || []
-          children.push(job)
-          Vue.set(existingTask, 'children', children)
-        }
+  })
+  return {
+    errors
+  }
+}
+
+/**
+ * @param {GraphQLResponseData} data
+ * @param {Array} table
+ * @param {Lookup} lookup
+ */
+export default function (data, table, lookup) {
+  const deltas = data.deltas
+  // first we check whether it is a new start
+  if (deltas && deltas.added && deltas.added.workflow) {
+    if (deltas.added.workflow.status === WorkflowState.RUNNING.name) {
+      // Clear the existing table data, if any
+      Object.keys(table).forEach(key => {
+        Vue.delete(table, key)
+      })
+    }
+  }
+  // Safe check in case the table is empty.
+  if (table.length === 0) {
+    if (!deltas.added || !deltas.added.workflow) {
+      return {
+        errors: [
+          [
+            'Received a delta before the workflow initial data burst',
+            deltas.added,
+            table
+          ]
+        ]
       }
     }
   }
-  if (updated) {
-    if (updated.taskProxies) {
-      for (const taskProxy of updated.taskProxies) {
-        if (tasks[taskProxy.id]) {
-          mergeWith(tasks[taskProxy.id], taskProxy, mergeWithCustomizer)
-        }
-      }
-    }
-    if (updated.jobs) {
-      for (const job of updated.jobs) {
-        // FIXME: job.firstParent is always empty for bar? / five workflow
-        if (job.firstParent && job.firstParent.id) {
-          const existingTask = tasks[job.firstParent.id]
-          const children = existingTask.children || []
-          const existingJob = children.find(existingJob => existingJob.id === job.id)
-          if (existingJob) {
-            mergeWith(existingJob, job, mergeWithCustomizer)
-          } else {
-            children.push(job)
-          }
-          Vue.set(existingTask, 'children', children)
-        }
-      }
-    }
-  }
-  if (pruned && pruned.taskProxies) {
-    for (const taskProxyId of pruned.taskProxies) {
-      if (tasks[taskProxyId]) {
-        Vue.delete(tasks, taskProxyId)
-      }
+  try {
+    return handleDeltas(deltas, table, lookup)
+  } catch (error) {
+    return {
+      errors: [
+        [
+          'Unexpected error applying deltas',
+          error,
+          deltas
+        ]
+      ]
     }
   }
 }

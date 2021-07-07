@@ -269,9 +269,9 @@ fragment WorkflowTreeUpdatedData on Updated {
 }
 
 fragment WorkflowTreePrunedData on Pruned {
-  jobs
-  taskProxies
   familyProxies
+  taskProxies
+  jobs
 }
 
 # TREE DELTAS END
@@ -324,23 +324,24 @@ fragment WorkflowTableAddedData on Added {
   }
   taskProxies(sort: {keys: ["name"], reverse: false}, ghosts: true) {
     ...TaskProxyData
-    jobs(sort: {keys: ["submit_num"], reverse: true}) {
+  }
+  jobs(sort: {keys: ["submit_num"], reverse: true}) {
     ...JobData
-    }
   }
 }
 
 fragment WorkflowTableUpdatedData on Updated {
   taskProxies(ghosts: true) {
     ...TaskProxyData
-    jobs {
-     ...JobData
-    }
+  }
+  jobs {
+    ...JobData
   }
 }
 
 fragment WorkflowTablePrunedData on Pruned {
   taskProxies
+  jobs
 }
 
 # TABLE DELTAS END

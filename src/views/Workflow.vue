@@ -48,6 +48,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 <script>
 import Vue from 'vue'
+import { mapState } from 'vuex'
 import { each, iter } from '@lumino/algorithm'
 import pageMixin from '@/mixins'
 import graphqlMixin from '@/mixins/graphql'
@@ -60,7 +61,6 @@ import CylcObjectMenu from '@/components/cylc/cylcObject/Menu'
 import MutationsView from '@/views/Mutations'
 import TableView from '@/views/Table'
 import TreeView from '@/views/Tree'
-import { mapState } from 'vuex'
 
 export default {
   name: 'Workflow',
@@ -109,7 +109,7 @@ export default {
     })
   },
   computed: {
-    ...mapState('workflows', ['workflow'])
+    ...mapState('workflows', ['workflow', 'table'])
   },
   beforeRouteEnter (to, from, next) {
     next(vm => {
