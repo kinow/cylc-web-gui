@@ -78,7 +78,7 @@ describe('Table component', () => {
         tasks: simpleTableTasks
       }
     })
-    expect(wrapper.props().tasks[0].name).to.equal('taskA')
+    expect(wrapper.props().tasks[0].node.name).to.equal('taskA')
     expect(wrapper.find('div')).to.not.equal(null)
   })
 })

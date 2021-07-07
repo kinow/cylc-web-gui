@@ -22,32 +22,39 @@ const BASE_ID = 'cylc|workflow|1'
 const simpleTableTasks = [
   {
     id: `${BASE_ID}|taskA`,
-    state: TaskState.RUNNING.name,
-    name: 'taskA',
-    meanElapsedTime: 2000,
-    jobs: [
-      {
-        platform: 'localhost',
-        jobRunnerName: 'background',
-        jobId: '1',
-        submittedTime: new Date(),
-        startedTime: new Date(),
-        finishedTime: null,
-        state: JobState.RUNNING.name
-      }
-    ]
+    node: {
+      id: `${BASE_ID}|taskA`,
+      state: TaskState.RUNNING.name,
+      name: 'taskA',
+      meanElapsedTime: 2000
+    },
+    latestJob: {
+      platform: 'localhost',
+      jobRunnerName: 'background',
+      jobId: '1',
+      submittedTime: new Date(),
+      startedTime: new Date(),
+      finishedTime: null,
+      state: JobState.RUNNING.name
+    }
   },
   {
     id: `${BASE_ID}|taskB`,
-    state: TaskState.WAITING.name,
-    name: 'taskB',
-    jobs: []
+    node: {
+      id: `${BASE_ID}|taskB`,
+      state: TaskState.WAITING.name,
+      name: 'taskB'
+    },
+    latestJob: {}
   },
   {
-    id: `${BASE_ID}|taskB`,
-    state: TaskState.SUBMITTED.name,
-    name: 'taskB',
-    jobs: []
+    id: `${BASE_ID}|taskC`,
+    node: {
+      id: `${BASE_ID}|taskC`,
+      state: TaskState.SUBMITTED.name,
+      name: 'taskC'
+    },
+    latestJob: {}
   }
 ]
 
