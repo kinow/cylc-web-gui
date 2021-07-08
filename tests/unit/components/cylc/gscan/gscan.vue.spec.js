@@ -145,7 +145,7 @@ describe('GScan component', () => {
           ]),
           expected: ['a', 'b', 'c', 'd', 'e']
         },
-        // running workflows are displayed first, then paused, then the rest...
+        // running/paused/stopping grouped together and sorted, then the rest...
         {
           workflows: createWorkflows([
             { name: 'a', status: WorkflowState.RUNNING },
@@ -156,7 +156,7 @@ describe('GScan component', () => {
           ]),
           expected: ['a', 'e', 'b', 'c', 'd']
         },
-        // sorted alphabetically within statuses
+        // sorted alphabetically within statuses (running/paused/stopping are grouped together)
         {
           workflows: createWorkflows([
             { name: 'e', status: WorkflowState.PAUSED },
@@ -165,7 +165,7 @@ describe('GScan component', () => {
             { name: 'b', status: WorkflowState.RUNNING },
             { name: 'd', status: WorkflowState.STOPPED }
           ]),
-          expected: ['b', 'a', 'e', 'c', 'd']
+          expected: ['a', 'b', 'e', 'c', 'd']
         },
         {
           workflows: createWorkflows([
@@ -175,7 +175,7 @@ describe('GScan component', () => {
             { name: 'd', status: WorkflowState.STOPPED },
             { name: 'e', status: WorkflowState.PAUSED }
           ]),
-          expected: ['b', 'a', 'e', 'c', 'd']
+          expected: ['a', 'b', 'e', 'c', 'd']
         },
         // new statuses (stopping, error)
         {
@@ -193,7 +193,7 @@ describe('GScan component', () => {
             { name: 'k', status: WorkflowState.RUNNING },
             { name: 'l', status: WorkflowState.PAUSED }
           ]),
-          expected: ['b', 'k', 'a', 'e', 'f', 'l', 'h', 'j', 'c', 'd', 'i', 'g']
+          expected: ['a', 'b', 'e', 'f', 'h', 'j', 'k', 'l', 'c', 'd', 'i', 'g']
         }
       ]
       tests.forEach(test => {
@@ -202,7 +202,10 @@ describe('GScan component', () => {
         const workflowsElements = wrapper.findAllComponents(TreeItem)
         expect(workflowsElements.length).to.equal(test.expected.length)
         for (let i = 0; i < test.expected.length; i++) {
-          expect(test.expected[i]).to.equal(workflowsElements.at(i).element.textContent)
+          expect(test.expected[i]).to.equal(
+            workflowsElements.at(i).element.textContent,
+            `Sort failed for given ${JSON.stringify(test.workflows)} using ${test.expected}`
+          )
         }
       })
     })

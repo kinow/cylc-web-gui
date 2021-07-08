@@ -54,12 +54,12 @@ export class WorkflowState extends Enumify {
  * Workflow states ordered for display purposes.
  */
 export const WorkflowStateOrder = [
-  WorkflowState.RUNNING,
-  WorkflowState.PAUSED,
-  WorkflowState.STOPPING,
-  WorkflowState.STOPPED,
-  WorkflowState.INSTALLED,
-  WorkflowState.ERROR
+  [WorkflowState.RUNNING, 0],
+  [WorkflowState.PAUSED, 0],
+  [WorkflowState.STOPPING, 0],
+  [WorkflowState.STOPPED, 1],
+  [WorkflowState.INSTALLED, 2],
+  [WorkflowState.ERROR, 3]
 ]
 
 export default WorkflowState
