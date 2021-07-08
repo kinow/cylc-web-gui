@@ -18,7 +18,7 @@
 import { mergeWith } from 'lodash'
 import Vue from 'vue'
 import WorkflowState from '@/model/WorkflowState.model'
-import { mergeWithCustomizer } from '@/utils/merge'
+import { mergeWithCustomizer } from '@/components/cylc/common/merge'
 
 function applyDeltasAdded (added, table, lookup) {
   const result = {

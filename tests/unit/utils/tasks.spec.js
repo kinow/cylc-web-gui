@@ -17,7 +17,7 @@
 
 import { expect } from 'chai'
 import TaskState from '@/model/TaskState.model'
-import { extractGroupState } from '@/utils/tasks'
+import { extractGroupState, taskStartTime, taskEstimatedDuration, latestJob } from '@/utils/tasks'
 
 describe('tasks', () => {
   describe('extractGroupState', () => {
@@ -55,6 +55,105 @@ describe('tasks', () => {
     })
     it('should return empty when no states provided', () => {
       expect(extractGroupState([])).to.equal('')
+    })
+  })
+  describe('taskStartTime', () => {
+    it('should return the correct value for taskStatTime', () => {
+      const tests = [
+        {
+          taskProxy: null,
+          job: null,
+          expected: null
+        },
+        {
+          taskProxy: {},
+          job: null,
+          expected: null
+        },
+        {
+          taskProxy: {
+            state: TaskState.WAITING.name
+          },
+          job: {},
+          expected: null
+        },
+        {
+          taskProxy: {
+            state: TaskState.RUNNING.name
+          },
+          job: {
+            startedTime: 1
+          },
+          expected: 1
+        }
+      ]
+      tests.forEach(test => {
+        const result = taskStartTime(test.taskProxy, test.job)
+        expect(result).to.equal(test.expected)
+      })
+    })
+  })
+  describe('taskEstimatedDuration', () => {
+    it('should return the correct value for taskEstimatedDuration', () => {
+      const tests = [
+        {
+          taskProxy: null,
+          expected: null
+        },
+        {
+          taskProxy: {},
+          expected: null
+        },
+        {
+          taskProxy: {
+            task: {}
+          },
+          expected: null
+        },
+        {
+          taskProxy: {
+            task: {
+              meanElapsedTime: 1
+            }
+          },
+          expected: 1
+        }
+      ]
+      tests.forEach(test => {
+        const result = taskEstimatedDuration(test.taskProxy)
+        expect(result).to.equal(test.expected)
+      })
+    })
+  })
+  describe('latestJob', () => {
+    it('should return the correct value for latestJob', () => {
+      const tests = [
+        {
+          taskProxy: null,
+          expected: null
+        },
+        {
+          taskProxy: {},
+          expected: null
+        },
+        {
+          taskProxy: {
+            children: []
+          },
+          expected: null
+        },
+        {
+          taskProxy: {
+            children: [
+              1
+            ]
+          },
+          expected: 1
+        }
+      ]
+      tests.forEach(test => {
+        expect(latestJob(test.taskProxy)).to.equal(test.expected)
+      })
     })
   })
 })
