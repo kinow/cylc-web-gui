@@ -36,15 +36,17 @@ describe('workflows', () => {
       tree: {},
       lookup: {}
     }
+    store.state.workflows.table = {}
     store.state.workflows.workflows = []
     store.state.workflows.workflowName = null
   }
   beforeEach(resetState)
   afterEach(resetState)
   describe('State', () => {
-    it('should start with empty lookup, empty workflow, no workflows, and no workflow name', () => {
+    it('should start with empty lookup, empty workflow, empty table, no workflows, and no workflow name', () => {
       expect(Object.keys(store.state.workflows.lookup).length).to.deep.equal(0)
       expect(store.state.workflows.workflow).to.deep.equal({ tree: {}, lookup: {} })
+      expect(store.state.workflows.table).to.deep.equal({})
       expect(store.state.workflows.workflows.length).to.equal(0)
       expect(store.state.workflows.workflowName).to.equal(null)
     })
@@ -111,6 +113,26 @@ describe('workflows', () => {
       expect(store.state.workflows.workflow).to.deep.equal(workflow)
       store.commit('workflows/CLEAR_WORKFLOW', workflow)
       expect(store.state.workflows.workflow).to.not.deep.equal(workflow)
+    })
+    it('should set table', () => {
+      const table = {
+        'cylc|cylc|1|foo': {
+          id: 'cylc|cylc|1|foo'
+        }
+      }
+      store.commit('workflows/SET_TABLE', table)
+      expect(store.state.workflows.table).to.deep.equal(table)
+    })
+    it('should clear table', () => {
+      const table = {
+        'cylc|cylc|1|foo': {
+          id: 'cylc|cylc|1|foo'
+        }
+      }
+      store.commit('workflows/SET_TABLE', table)
+      expect(store.state.workflows.table).to.deep.equal(table)
+      store.commit('workflows/CLEAR_TABLE', table)
+      expect(store.state.workflows.table).to.not.deep.equal(table)
     })
   })
   describe('Actions', () => {
@@ -196,6 +218,42 @@ describe('workflows', () => {
       expect(store.state.workflows.workflow).to.deep.equal(workflow)
       store.dispatch('workflows/clearTree')
       expect(store.state.workflows.workflow).to.not.deep.equal(workflow)
+    })
+    it('should apply table deltas', () => {
+      const data = {
+        deltas: {
+          added: {
+            taskProxies: [
+              {
+                id: 'test',
+                state: 'test'
+              }
+            ]
+          }
+        }
+      }
+      store.dispatch('workflows/applyWorkflowDeltas', data)
+      store.dispatch('workflows/applyTableDeltas', data)
+      expect(store.state.workflows.table.test.id).to.equal('test')
+    })
+    it('should clear table', () => {
+      const data = {
+        deltas: {
+          added: {
+            taskProxies: [
+              {
+                id: 'test',
+                state: 'test'
+              }
+            ]
+          }
+        }
+      }
+      store.dispatch('workflows/applyWorkflowDeltas', data)
+      store.dispatch('workflows/applyTableDeltas', data)
+      expect(store.state.workflows.table.test.id).to.equal('test')
+      store.dispatch('workflows/clearTable')
+      expect(store.state.workflows.table.test).to.equal(undefined)
     })
   })
 })
