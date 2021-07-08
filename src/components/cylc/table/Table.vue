@@ -220,9 +220,7 @@ export default {
       })
     },
     tasksFilterStates () {
-      return this.activeFilters.states.map(selectedTaskState => {
-        return selectedTaskState
-      })
+      return this.activeFilters.states
     },
     filteredTasks () {
       const filterByName = this.filterByTaskName()
@@ -230,11 +228,11 @@ export default {
       return this.tasks
         .filter(task => {
           if (filterByName && filterByState) {
-            return task.name.includes(this.activeFilters.name) && this.tasksFilterStates.includes(task.state)
+            return task.node.name.includes(this.activeFilters.name) && this.tasksFilterStates.includes(task.state)
           } else if (filterByName) {
-            return task.name.includes(this.activeFilters.name)
+            return task.node.name.includes(this.activeFilters.name)
           } else if (filterByState) {
-            return this.tasksFilterStates.includes(task.state)
+            return this.tasksFilterStates.includes(task.node.state)
           }
           return true
         })

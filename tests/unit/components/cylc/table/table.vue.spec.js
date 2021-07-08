@@ -15,12 +15,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import Vue from 'vue'
 import { createLocalVue, mount } from '@vue/test-utils'
 import { expect } from 'chai'
-import CylcObjectPlugin from '@/components/cylc/cylcObject/plugin'
-import Table from '@/components/cylc/table/Table'
 import Vuetify from 'vuetify/lib'
 import { simpleTableTasks } from './table.data'
+import TaskState from '@/model/TaskState.model'
+import CylcObjectPlugin from '@/components/cylc/cylcObject/plugin'
+import Table from '@/components/cylc/table/Table'
+
+Vue.use(Vuetify)
 
 const localVue = createLocalVue()
 localVue.prototype.$eventBus = {
@@ -80,5 +84,77 @@ describe('Table component', () => {
     })
     expect(wrapper.props().tasks[0].node.name).to.equal('taskA')
     expect(wrapper.find('div')).to.not.equal(null)
+  })
+  describe('Filter', () => {
+    describe('Filter by name', () => {
+      it('should not filter by name or tasks by default', () => {
+        const wrapper = mountFunction({
+          propsData: {
+            tasks: simpleTableTasks
+          }
+        })
+        expect(wrapper.vm.activeFilters).to.equal(null)
+        expect(wrapper.vm.filteredTasks.length).to.equal(3)
+        wrapper.vm.filterTasks()
+        expect(wrapper.vm.filteredTasks.length).to.equal(3)
+      })
+      it('should filter by name', () => {
+        const wrapper = mountFunction({
+          propsData: {
+            tasks: simpleTableTasks
+          },
+          data () {
+            return {
+              tasksFilter: {
+                name: 'taskA'
+              }
+            }
+          }
+        })
+        expect(wrapper.vm.filteredTasks.length).to.equal(3)
+        wrapper.vm.filterTasks()
+        expect(wrapper.vm.filteredTasks.length).to.equal(1)
+      })
+      it('should filter by task state', () => {
+        const wrapper = mountFunction({
+          propsData: {
+            tasks: simpleTableTasks
+          },
+          data () {
+            return {
+              tasksFilter: {
+                name: '',
+                states: [
+                  TaskState.WAITING.name
+                ]
+              }
+            }
+          }
+        })
+        expect(wrapper.vm.filteredTasks.length).to.equal(3)
+        wrapper.vm.filterTasks()
+        expect(wrapper.vm.filteredTasks.length).to.equal(1)
+      })
+      it('should filter by task name and state', () => {
+        const wrapper = mountFunction({
+          propsData: {
+            tasks: simpleTableTasks
+          },
+          data () {
+            return {
+              tasksFilter: {
+                name: 'taskA',
+                states: [
+                  TaskState.WAITING.name
+                ]
+              }
+            }
+          }
+        })
+        expect(wrapper.vm.filteredTasks.length).to.equal(3)
+        wrapper.vm.filterTasks()
+        expect(wrapper.vm.filteredTasks.length).to.equal(0)
+      })
+    })
   })
 })
