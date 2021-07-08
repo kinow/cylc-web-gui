@@ -35,7 +35,11 @@ const DATA_MAPPING = {
       added: data.GscanSubscriptionQuery
     }
   },
-  WorkflowsTableQuery: data.WorkflowsTableQuery
+  OnWorkflowTableDeltasData: {
+    deltas: {
+      added: data.OnWorkflowTableDeltasData
+    }
+  }
 }
 
 /**

@@ -297,7 +297,7 @@ ${JOB_DATA_FRAGMENT}
  * @type {DocumentNode}
  */
 const WORKFLOW_TABLE_DELTAS_SUBSCRIPTION = gql`
-subscription OnWorkflowDeltasData($workflowId: ID) {
+subscription OnWorkflowTableDeltasData ($workflowId: ID) {
   deltas(workflows: [$workflowId], stripNull: true) {
     ...WorkflowTableDeltas
   }

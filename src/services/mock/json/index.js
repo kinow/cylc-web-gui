@@ -19,7 +19,7 @@ const DashboardSubscriptionQuery = require('./DashboardSubscriptionQuery.json')
 const IntrospectionQuery = require('./IntrospectionQuery.json')
 const GscanSubscriptionQuery = require('./GscanSubscriptionQuery.json')
 const OnWorkflowTreeDeltasData = require('./OnWorkflowTreeDeltasData.json')
-const WorkflowsTableQuery = require('./WorkflowsTableQuery.json')
+const OnWorkflowTableDeltasData = require('./OnWorkflowTableDeltasData.json')
 const userProfile = require('./userprofile.json')
 
 module.exports = {
@@ -27,6 +27,6 @@ module.exports = {
   IntrospectionQuery,
   GscanSubscriptionQuery,
   OnWorkflowTreeDeltasData,
-  WorkflowsTableQuery,
+  OnWorkflowTableDeltasData,
   userProfile
 }
