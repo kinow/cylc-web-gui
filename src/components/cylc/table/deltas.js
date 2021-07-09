@@ -20,6 +20,14 @@ import Vue from 'vue'
 import WorkflowState from '@/model/WorkflowState.model'
 import { mergeWithCustomizer } from '@/components/cylc/common/merge'
 
+/**
+ * Deltas added.
+ *
+ * @param {DeltasAdded} added
+ * @param {Table} table
+ * @param {Lookup} lookup
+ * @returns {Result}
+ */
 function applyDeltasAdded (added, table, lookup) {
   const result = {
     errors: []
@@ -51,6 +59,14 @@ function applyDeltasAdded (added, table, lookup) {
   return result
 }
 
+/**
+ * Deltas updated.
+ *
+ * @param {DeltasUpdated} updated
+ * @param {Table} table
+ * @param {Lookup} lookup
+ * @returns {Result}
+ */
 function applyDeltasUpdated (updated, table, lookup) {
   const result = {
     errors: []
@@ -75,6 +91,14 @@ function applyDeltasUpdated (updated, table, lookup) {
   return result
 }
 
+/**
+ * Deltas pruned.
+ *
+ * @param {DeltasPruned} pruned
+ * @param {Table} table
+ * @param {Lookup} lookup
+ * @returns {Result}
+ */
 function applyDeltasPruned (pruned, table, lookup) {
   const result = {
     errors: []
@@ -105,6 +129,10 @@ const DELTAS = {
 }
 
 /**
+ * Handle the deltas for the table view.
+ *
+ * It will use the tasks and jobs of the deltas.
+ *
  * @param deltas
  * @param table
  * @param {Lookup} lookup
@@ -125,7 +153,7 @@ function handleDeltas (deltas, table, lookup) {
 
 /**
  * @param {GraphQLResponseData} data
- * @param {Array} table
+ * @param {Table} table
  * @param {Lookup} lookup
  */
 export default function (data, table, lookup) {
@@ -140,7 +168,7 @@ export default function (data, table, lookup) {
     }
   }
   // Safe check in case the table is empty.
-  if (table.length === 0) {
+  if (Object.keys(table).length === 0) {
     if (!deltas.added || !deltas.added.workflow) {
       return {
         errors: [
