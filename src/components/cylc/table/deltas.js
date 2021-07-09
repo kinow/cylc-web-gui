@@ -64,7 +64,7 @@ function applyDeltasAdded (added, table, lookup) {
  *
  * @param {DeltasUpdated} updated
  * @param {Table} table
- * @param {Lookup} lookup
+ * @param {Lookup} lookup - Not really used since we can fetch the data from the table, and we are not altering the lookup data
  * @returns {Result}
  */
 function applyDeltasUpdated (updated, table, lookup) {
@@ -110,12 +110,11 @@ function applyDeltasPruned (pruned, table, lookup) {
   }
   if (pruned.jobs) {
     pruned.jobs.forEach(jobId => {
-      const existingJob = lookup[jobId]
-      if (existingJob) {
-        const existingEntry = table[existingJob.firstParent.id]
-        if (existingEntry && existingEntry.latestJob.id === jobId) {
-          Vue.set(existingEntry, 'latestJob', {})
-        }
+      // TODO: should we use an internal lookup for table too? To replace this loop by a quick O(1) operation
+      //       to fetch the existing job with its ID, and then its existing parent task?
+      const parentTask = Object.values(table).find(entry => entry.latestJob && entry.latestJob.id === jobId)
+      if (parentTask && parentTask.latestJob) {
+        Vue.set(parentTask, 'latestJob', {})
       }
     })
   }

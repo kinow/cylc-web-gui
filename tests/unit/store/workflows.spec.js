@@ -223,6 +223,9 @@ describe('workflows', () => {
       const data = {
         deltas: {
           added: {
+            workflow: {
+              id: 1
+            },
             taskProxies: [
               {
                 id: 'test',
@@ -240,6 +243,9 @@ describe('workflows', () => {
       const data = {
         deltas: {
           added: {
+            workflow: {
+              id: 1
+            },
             taskProxies: [
               {
                 id: 'test',
