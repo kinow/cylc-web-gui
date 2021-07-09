@@ -228,7 +228,7 @@ export default {
       return this.tasks
         .filter(task => {
           if (filterByName && filterByState) {
-            return task.node.name.includes(this.activeFilters.name) && this.tasksFilterStates.includes(task.state)
+            return task.node.name.includes(this.activeFilters.name) && this.tasksFilterStates.includes(task.node.state)
           } else if (filterByName) {
             return task.node.name.includes(this.activeFilters.name)
           } else if (filterByState) {

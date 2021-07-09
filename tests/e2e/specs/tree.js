@@ -17,7 +17,7 @@
 
 import TaskState from '@/model/TaskState.model'
 
-describe('Tree component', () => {
+describe('Tree view', () => {
   it('Should display cycle points for the mocked workflow', () => {
     cy.visit('/#/workflows/one')
     cy
@@ -256,14 +256,14 @@ describe('Tree component', () => {
         .get('.node-data-task-proxy')
         .contains('sleepy')
         .should('be.visible')
-      // eep should filter sleepy
+      // retry should filter retry
       cy
         .get('#c-tree-filter-task-name')
         .type('retry')
       cy
         .get('#c-tree-filter-task-states')
         .click({ force: true })
-      // click on waiting, the other sleepy is succeeded, but we don't want to see it
+      // click on waiting, the retry is succeeded, but we don't want to see it
       cy
         .get('.v-list-item')
         .contains(TaskState.WAITING.name)
