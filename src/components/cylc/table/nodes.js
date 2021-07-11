@@ -15,18 +15,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-const DashboardSubscriptionQuery = require('./DashboardSubscriptionQuery.json')
-const IntrospectionQuery = require('./IntrospectionQuery.json')
-const GscanSubscriptionQuery = require('./GscanSubscriptionQuery.json')
-const OnWorkflowTreeDeltasData = require('./OnWorkflowTreeDeltasData.json')
-const OnWorkflowTableDeltasData = require('./OnWorkflowTableDeltasData.json')
-const userProfile = require('./userprofile.json')
+/**
+ * @typedef {Object<String, TableElement>} Table
+ */
 
-module.exports = {
-  DashboardSubscriptionQuery,
-  IntrospectionQuery,
-  GscanSubscriptionQuery,
-  OnWorkflowTreeDeltasData,
-  OnWorkflowTableDeltasData,
-  userProfile
-}
+/**
+ * @typedef {Object} TableElement
+ * @property {string} id
+ * @property {Object} node - GraphQL task proxy data
+ * @property {Object} latestJob - GraphQL job data
+ */

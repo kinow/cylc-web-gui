@@ -45,6 +45,7 @@ below.
  - Edgardo Ramírez
  - Mel Hall
  - Ronnie Dutta
+ - Giuliano Serrao
 
 (All contributors are identifiable with email addresses in the git version
 control logs or otherwise.)

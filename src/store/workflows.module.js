@@ -16,11 +16,43 @@
  */
 import applyDeltasWorkflows from '@/components/cylc/gscan/deltas'
 import applyDeltasLookup from '@/components/cylc/workflow/deltas'
+import applyDeltasTable from '@/components/cylc/table/deltas'
 import applyDeltasTree from '@/components/cylc/tree/deltas'
 import Alert from '@/model/Alert.model'
 import { clear } from '@/components/cylc/tree/index'
 
 const state = {
+  // GScan, Dashboard, WorkflowsTable data
+  /**
+   * This contains a list of workflows returned from GraphQL and is used by components
+   * such as GScan, Dashboard, and WorkflowsTable.
+   *
+   * @type {Array<Object>}
+   */
+  workflows: [],
+  /**
+   * This holds the name of the current workflow. This is set by VueRouter
+   * and is used to decide what's the current workflow. It is used in conjunction
+   * with the workflows/workflows (above) when finding the current workflow and
+   * using it, for instance, to create the GraphQL variables of a workflow
+   * view (see mixins used in the Tree View).
+   *
+   * @type {String}
+   */
+  workflowName: null,
+  // Table view data
+  /**
+   * This is the table data used by the Table View. We store the data for the table for a single workflow
+   * in this object.
+   *
+   * The data contains data **derived** from tasks and jobs. The data is not a task nor a job. It contains
+   * exactly what is required by the Table View, each column as displayed in the UI, so that the component
+   * needs to do very little processing when rendering the data.
+   *
+   * See the action and mutation for more about how the processing is done in this Vuex module.
+   */
+  table: {},
+  // Tree view data
   /**
    * This stores workflow data as a hashmap/dictionary. The keys
    * are the ID's of the entities returned from GraphQL.
@@ -46,24 +78,7 @@ const state = {
   workflow: {
     tree: {},
     lookup: {}
-  },
-  /**
-   * This contains a list of workflows returned from GraphQL and is used by components
-   * such as GScan, Dashboard, and WorkflowsTable.
-   *
-   * @type {Array<Object>}
-   */
-  workflows: [],
-  /**
-   * This holds the name of the current workflow. This is set by VueRouter
-   * and is used to decide what's the current workflow. It is used in conjunction
-   * with the workflows/workflows (above) when finding the current workflow and
-   * using it, for instance, to create the GraphQL variables of a workflow
-   * view (see mixins used in the Tree View).
-   *
-   * @type {String}
-   */
-  workflowName: null
+  }
 }
 
 const getters = {
@@ -82,6 +97,12 @@ const mutations = {
   },
   SET_WORKFLOW_NAME (state, data) {
     state.workflowName = data
+  },
+  SET_TABLE (state, data) {
+    state.table = data
+  },
+  CLEAR_TABLE (state) {
+    state.table = {}
   },
   SET_WORKFLOW (state, data) {
     state.workflow = data
@@ -119,9 +140,7 @@ const actions = {
     // modifying state directly in an action results in warnings...
     const lookup = Object.assign({}, state.lookup)
     const result = applyDeltasLookup(data, lookup)
-    if (result.errors.length === 0) {
-      commit('SET_LOOKUP', lookup)
-    }
+    commit('SET_LOOKUP', lookup)
     result.errors.forEach(error => {
       commit('SET_ALERT', new Alert(error[0], null, 'error'), { root: true })
       // eslint-disable-next-line no-console
@@ -131,8 +150,22 @@ const actions = {
   clearWorkflow ({ commit }) {
     commit('SET_LOOKUP', {})
   },
-  applyTreeDeltas ({ commit, state }, data) {
+  applyTableDeltas ({ commit, state }, data) {
     // modifying state directly in an action results in warnings...
+    const table = Object.assign({}, state.table)
+    const lookup = state.lookup
+    const result = applyDeltasTable(data, table, lookup)
+    commit('SET_TABLE', table)
+    result.errors.forEach(error => {
+      commit('SET_ALERT', new Alert(error[0], null, 'error'), { root: true })
+      // eslint-disable-next-line no-console
+      console.warn(...error)
+    })
+  },
+  clearTable ({ commit }) {
+    commit('CLEAR_TABLE')
+  },
+  applyTreeDeltas ({ commit, state }, data) {
     const workflow = state.workflow
     const lookup = state.lookup
     // TODO: this could be an options object stored in the Vuex store, in some module...
@@ -142,9 +175,7 @@ const actions = {
         : true
     }
     const result = applyDeltasTree(data, workflow, lookup, options)
-    if (result.errors.length === 0) {
-      commit('SET_WORKFLOW', workflow)
-    }
+    commit('SET_WORKFLOW', workflow)
     result.errors.forEach(error => {
       commit('SET_ALERT', new Alert(error[0], null, 'error'), { root: true })
       // eslint-disable-next-line no-console

@@ -57,3 +57,8 @@
  * @property {Array<string>} familyProxies - IDs of family proxies removed
  * @property {Array<string>} jobs - IDs of jobs removed
  */
+
+/**
+ * @typedef {Object} Result
+ * @property {Array<Object>} errors
+ */

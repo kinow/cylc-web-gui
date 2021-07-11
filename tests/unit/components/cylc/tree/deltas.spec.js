@@ -50,7 +50,7 @@ describe('Deltas', () => {
   it('Should skip if no deltas provided', () => {
     expect(() => applyTreeDeltas(null, null, null)).to.throw(Error)
   })
-  it('Should clear the tree if the worfklow started', () => {
+  it('Should clear the tree if the workflow started', () => {
     const workflowNode = createWorkflowNode({
       id: WORKFLOW_ID
     })
