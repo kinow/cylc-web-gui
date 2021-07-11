@@ -48,6 +48,8 @@ to receive the deltas of workflow-subscriptions.
 [#625](https://github.com/cylc/cylc-ui/pull/625) - alert: repeated errors
 are ignored.
 
+[#672](https://github.com/cylc/cylc-ui/pull/672) - add table view.
+
 ### Fixes
 
 [#691](https://github.com/cylc/cylc-ui/pull/691) -
