@@ -133,6 +133,56 @@ describe('Deltas', () => {
       expect(Object.keys(table).length).to.equal(7)
       expect(table[11].latestJob.id).to.equal(100)
     })
+    it('Should collect errors', () => {
+      // create 5 tasks
+      [...Array(5).keys()].forEach(i => {
+        table[i] = {
+          id: i,
+          node: {
+            id: i
+          },
+          latestJob: null
+        }
+      })
+      // The table now should have 5 entries.
+      expect(Object.keys(table).length).to.equal(5)
+      // Then we send a delta with the workflow added, and with the state
+      // of running.
+      const deltas = {
+        deltas: {
+          id: WORKFLOW_ID,
+          added: {
+            taskProxies: [
+              {
+                id: 10,
+                state: TaskState.RUNNING.name
+              },
+              {
+                id: 11,
+                state: TaskState.WAITING.name
+              }
+            ],
+            jobs: [
+              {
+                id: 100,
+                submitNum: 1,
+                firstParent: {
+                  id: 11
+                }
+              }
+            ]
+          }
+        }
+      }
+      applyWorkflowDeltas(deltas, lookup)
+      const stub = sandbox.stub(Vue, 'set')
+      stub.callsFake(() => {
+        throw new Error('test')
+      })
+      const result = applyTreeDeltas(deltas, table, lookup)
+      expect(result.errors.length).to.equal(1)
+      expect(result.errors[0][1].message).to.contain('test')
+    })
   })
   describe('Updated', () => {
     beforeEach(() => {
@@ -191,6 +241,41 @@ describe('Deltas', () => {
       expectNoErrors(result)
       expect(table[1].node.state).to.equal(TaskState.FAILED.name)
       expect(table[1].latestJob.state).to.equal(JobState.SUBMIT_FAILED.name)
+    })
+    it('Should collect errors', () => {
+      expect(table[1].node.state).to.equal(TaskState.RUNNING.name)
+      expect(table[1].latestJob.state).to.equal(JobState.RUNNING.name)
+      const deltas = {
+        deltas: {
+          id: WORKFLOW_ID,
+          updated: {
+            taskProxies: [
+              {
+                id: 1,
+                state: TaskState.FAILED.name
+              }
+            ],
+            jobs: [
+              {
+                id: 11,
+                submitNum: 1,
+                firstParent: {
+                  id: 1
+                },
+                state: JobState.SUBMIT_FAILED.name
+              }
+            ]
+          }
+        }
+      }
+      applyWorkflowDeltas(deltas, lookup)
+      const stub = sandbox.stub(Vue, 'set')
+      stub.callsFake(() => {
+        throw new Error('test')
+      })
+      const result = applyTreeDeltas(deltas, table, lookup)
+      expect(result.errors.length).to.equal(1)
+      expect(result.errors[0][1].message).to.contain('test')
     })
   })
   describe('Pruned', () => {
