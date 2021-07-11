@@ -180,7 +180,7 @@ describe('Deltas', () => {
         throw new Error('test')
       })
       const result = applyTreeDeltas(deltas, table, lookup)
-      expect(result.errors.length).to.equal(1)
+      expect(result.errors.length).to.equal(2)
       expect(result.errors[0][1].message).to.contain('test')
     })
   })

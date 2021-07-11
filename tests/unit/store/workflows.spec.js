@@ -18,9 +18,12 @@
 import { expect } from 'chai'
 import Vue from 'vue'
 import Vuex from 'vuex'
+import sinon from 'sinon'
 import storeOptions from '@/store/options'
 
 Vue.use(Vuex)
+
+const sandbox = sinon.createSandbox()
 
 /**
  * Tests for the store/workflows module.
@@ -31,6 +34,7 @@ describe('workflows', () => {
     global.localStorage = {}
   }
   const resetState = () => {
+    store.state.alert = null
     store.state.workflows.lookup = {}
     store.state.workflows.workflow = {
       tree: {},
@@ -40,8 +44,14 @@ describe('workflows', () => {
     store.state.workflows.workflows = []
     store.state.workflows.workflowName = null
   }
-  beforeEach(resetState)
-  afterEach(resetState)
+  beforeEach(() => {
+    resetState()
+    sandbox.stub(console, 'warn')
+  })
+  afterEach(() => {
+    resetState()
+    sandbox.restore()
+  })
   describe('State', () => {
     it('should start with empty lookup, empty workflow, empty table, no workflows, and no workflow name', () => {
       expect(Object.keys(store.state.workflows.lookup).length).to.deep.equal(0)
@@ -181,6 +191,26 @@ describe('workflows', () => {
       store.dispatch('workflows/applyWorkflowDeltas', data)
       expect(store.state.workflows.lookup.test).to.not.equal(undefined)
     })
+    it('should handle errors when applying workflow deltas', () => {
+      const data = {
+        deltas: {
+          added: {
+            workflow: {
+              id: 'test',
+              status: 'test'
+            }
+          }
+        }
+      }
+      const stub = sandbox.stub(Vue, 'set')
+      stub.callsFake(() => {
+        throw new Error('test')
+      })
+      expect(store.state.alert).to.equal(null)
+      store.dispatch('workflows/applyWorkflowDeltas', data)
+      expect(store.state.workflows.lookup.test).to.equal(undefined)
+      expect(store.state.alert.text).to.contain('added-delta')
+    })
     it('should apply tree deltas', () => {
       const data = {
         deltas: {
@@ -195,6 +225,27 @@ describe('workflows', () => {
       store.dispatch('workflows/applyWorkflowDeltas', data)
       store.dispatch('workflows/applyTreeDeltas', data)
       expect(store.state.workflows.workflow.tree.id).to.equal('test')
+    })
+    it('should handle errors when applying tree deltas', () => {
+      const data = {
+        deltas: {
+          added: {
+            workflow: {
+              id: 'test',
+              status: 'test'
+            }
+          }
+        }
+      }
+      store.dispatch('workflows/applyWorkflowDeltas', data)
+      const stub = sandbox.stub(Vue, 'set')
+      stub.callsFake(() => {
+        throw new Error('test')
+      })
+      expect(store.state.alert).to.equal(null)
+      store.dispatch('workflows/applyTreeDeltas', data)
+      expect(store.state.workflows.workflow.tree.id).to.equal(undefined)
+      expect(store.state.alert.text).to.contain('added-delta')
     })
     it('should clear lookup', () => {
       const lookup = {
@@ -238,6 +289,45 @@ describe('workflows', () => {
       store.dispatch('workflows/applyWorkflowDeltas', data)
       store.dispatch('workflows/applyTableDeltas', data)
       expect(store.state.workflows.table.test.id).to.equal('test')
+    })
+    it('should handle errors when applying table deltas', () => {
+      const data = {
+        deltas: {
+          added: {
+            workflow: {
+              id: 1
+            },
+            taskProxies: [
+              {
+                id: 'cylc|cylc|1|foo',
+                state: 'test'
+              }
+            ],
+            jobs: [
+              {
+                id: 'cylc|cylc|1|foo|1',
+                state: 'test',
+                firstParent: {
+                  id: 'cylc|cylc|1|foo'
+                }
+              }
+            ]
+          }
+        }
+      }
+      store.dispatch('workflows/applyWorkflowDeltas', data)
+      const stub = sandbox.stub(Vue, 'set')
+      stub.callsFake(() => {
+        throw new Error('test')
+      })
+      expect(store.state.alert).to.equal(null)
+      // So that the job for-loop is also tested
+      store.state.workflows.table['cylc|cylc|1|foo'] = {
+        latestJob: {}
+      }
+      store.dispatch('workflows/applyTableDeltas', data)
+      expect(store.state.workflows.table.id).to.equal(undefined)
+      expect(store.state.alert.text).to.contain('added-delta')
     })
     it('should clear table', () => {
       const data = {

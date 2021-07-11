@@ -140,9 +140,7 @@ const actions = {
     // modifying state directly in an action results in warnings...
     const lookup = Object.assign({}, state.lookup)
     const result = applyDeltasLookup(data, lookup)
-    if (result.errors.length === 0) {
-      commit('SET_LOOKUP', lookup)
-    }
+    commit('SET_LOOKUP', lookup)
     result.errors.forEach(error => {
       commit('SET_ALERT', new Alert(error[0], null, 'error'), { root: true })
       // eslint-disable-next-line no-console

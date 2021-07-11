@@ -34,25 +34,44 @@ function applyDeltasAdded (added, table, lookup) {
   }
   if (added.taskProxies) {
     for (const taskProxy of added.taskProxies) {
-      if (!table[taskProxy.id]) {
-        const tableEntry = {
+      try {
+        Vue.set(table, taskProxy.id, {
           id: taskProxy.id,
           node: lookup[taskProxy.id],
           latestJob: {}
-        }
-        Vue.set(table, taskProxy.id, tableEntry)
+        })
+      } catch (error) {
+        result.errors.push([
+          'Error applying added-delta for table task proxy, see browser console logs for more. Please reload your browser tab to retrieve the full flow state',
+          error,
+          taskProxy,
+          added,
+          table,
+          lookup
+        ])
       }
     }
   }
   if (added.jobs) {
     for (const job of added.jobs) {
-      const existingEntry = table[job.firstParent.id]
-      if (existingEntry) {
-        const latestJobSubmitNum = existingEntry.latestJob.submitNum || 0
-        const latestJob = latestJobSubmitNum < job.submitNum
-          ? lookup[job.id]
-          : existingEntry.latestJob
-        Vue.set(existingEntry, 'latestJob', latestJob)
+      try {
+        const existingEntry = table[job.firstParent.id]
+        if (existingEntry) {
+          const latestJobSubmitNum = existingEntry.latestJob.submitNum || 0
+          const latestJob = latestJobSubmitNum < job.submitNum
+            ? lookup[job.id]
+            : existingEntry.latestJob
+          Vue.set(existingEntry, 'latestJob', latestJob)
+        }
+      } catch (error) {
+        result.errors.push([
+          'Error applying added-delta for table job, see browser console logs for more. Please reload your browser tab to retrieve the full flow state',
+          error,
+          job,
+          added,
+          table,
+          lookup
+        ])
       }
     }
   }
