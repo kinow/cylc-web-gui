@@ -119,7 +119,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
               <v-list-item-title>
                 <v-layout align-center align-content-center d-flex flex-nowrap>
                   <v-flex
-                    v-if="scope.node.type === 'workflow'"
+                    v-if="scope.node.type === 'workflow-name-part'"
+                    class="c-gscan-workflow-name"
+                  >
+                    <span>{{ scope.node.node.name || scope.node.id }}</span>
+                  </v-flex>
+                  <v-flex
+                    v-else-if="scope.node.type === 'workflow'"
                     class="c-gscan-workflow-name"
                   >
                     <workflow-icon
@@ -199,7 +205,7 @@ import WorkflowState from '@/model/WorkflowState.model'
 import Job from '@/components/cylc/Job'
 import Tree from '@/components/cylc/tree/Tree'
 import WorkflowIcon from '@/components/cylc/gscan/WorkflowIcon'
-import { createWorkflowHierarchyFromName } from '@/components/cylc/gscan/nodes'
+import { createWorkflowNode } from '@/components/cylc/gscan/nodes'
 import { GSCAN_DELTAS_SUBSCRIPTION } from '@/graphql/queries'
 
 export default {
@@ -329,7 +335,7 @@ export default {
             { numeric: true, sensitivity: 'base' })
       })
         .map(workflow => {
-          return createWorkflowHierarchyFromName(workflow)
+          return createWorkflowNode(workflow, true)
         })
     }
   },

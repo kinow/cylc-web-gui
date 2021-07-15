@@ -1,7 +1,7 @@
 {
   "workflow": {
-    "id": "user|one",
-    "name": "one",
+    "id": "user|research/test/one/run1",
+    "name": "research/test/one/run1",
     "status": "running",
     "owner": "user",
     "host": "localhost",
