@@ -51,7 +51,7 @@ const state = {
    * This contains a list of workflows returned from GraphQL and is used by components
    * such as GScan, Dashboard, and WorkflowsTable.
    *
-   * @type {Array<Object>}
+   * @type {Array<WorkflowGraphQLData>}
    */
   workflows: [],
   /**

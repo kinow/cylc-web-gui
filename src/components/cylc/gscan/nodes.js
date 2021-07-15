@@ -18,8 +18,18 @@
 /**
  * @typedef {Object} WorkflowGScanNode
  * @property {String} id
+ * @property {String} name
  * @property {String} type
  * @property {WorkflowGraphQLData} node
+ */
+
+/**
+ * @typedef {Object} WorkflowNamePartGScanNode
+ * @property {String} id
+ * @property {String} name
+ * @property {String} type
+ * @property {WorkflowGraphQLData} node
+ * @property {Array<WorkflowNamePartGScanNode>} children
  */
 
 /**
@@ -27,23 +37,29 @@
  *
  * @private
  * @param {WorkflowGraphQLData} workflow
- * @returns {{node, id, type: string}}
+ * @param {string} part
+ * @returns {WorkflowGScanNode}
  */
-function newWorkflowNode (workflow) {
+function newWorkflowNode (workflow, part) {
   return {
     id: workflow.id,
+    name: part,
     type: 'workflow',
     node: workflow
   }
 }
 
 /**
+ * Create a new Workflow name part Node.
+ *
  * @param {string} id
  * @param {string} part
+ * @return {WorkflowNamePartGScanNode}
  */
 function newWorkflowPartNode (id, part) {
   return {
     id: id,
+    name: part,
     type: 'workflow-name-part',
     node: {
       id: id,
@@ -66,11 +82,11 @@ function newWorkflowPartNode (id, part) {
  *
  * @param {WorkflowGraphQLData} workflow
  * @param {boolean} hierarchy - whether to parse the Workflow name and create a hierarchy or not
- * @returns {{node, id, type: string}|null}
+ * @returns {WorkflowGScanNode|WorkflowNamePartGScanNode|null}
  */
 function createWorkflowNode (workflow, hierarchy) {
   if (!hierarchy) {
-    return newWorkflowNode(workflow)
+    return newWorkflowNode(workflow, null)
   }
   const workflowIdParts = workflow.id.split('|')
   // The prefix contains all the ID parts, except for the workflow name.
@@ -89,8 +105,7 @@ function createWorkflowNode (workflow, hierarchy) {
     prefix = prefix.includes('/') ? `${prefix}/${part}` : `${prefix}|${part}`
     const partNode = parts.length !== 0
       ? newWorkflowPartNode(prefix, part)
-      : newWorkflowNode(workflow)
-    partNode.node.name = part
+      : newWorkflowNode(workflow, part)
 
     if (rootNode === null) {
       rootNode = currentNode = partNode
@@ -102,6 +117,33 @@ function createWorkflowNode (workflow, hierarchy) {
   return rootNode
 }
 
+/**
+ * Add the new hierarchical node to the list of existing nodes.
+ *
+ * @param {WorkflowGScanNode|WorkflowNamePartGScanNode} node
+ * @param {Array<WorkflowGScanNode|WorkflowNamePartGScanNode>} nodes
+ * @return {Array<WorkflowGScanNode|WorkflowNamePartGScanNode>}
+ */
+function addNodeToTree (node, nodes) {
+  // N.B.: We must compare nodes by ID, not by part-name, since we can have
+  //       research/nwp/run1 workflow, and research workflow; in this case
+  //       we do not want to confuse the research part-name with the research
+  //       workflow.
+  const existingNode = nodes.find((existingNode) => existingNode.id === node.id)
+  if (!existingNode) {
+    nodes.push(node)
+  } else {
+    if (node.children) {
+      for (const child of node.children) {
+        // Recursion. Do note that we are changing the `nodes` to the children of the existing node.
+        addNodeToTree(child, existingNode.children)
+      }
+    }
+  }
+  return nodes
+}
+
 export {
+  addNodeToTree,
   createWorkflowNode
 }

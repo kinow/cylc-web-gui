@@ -134,9 +134,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                     />
                     <v-tooltip top>
                       <template v-slot:activator="{ on }">
-                        <span v-on="on">{{ scope.node.node.name || scope.node.id }}</span>
+                        <span v-on="on">{{ scope.node.name }}</span>
                       </template>
-                      <span>{{ scope.node.node.name || scope.node.id }}</span>
+                      <span>{{ scope.node.id }}</span>
                     </v-tooltip>
                   </v-flex>
                   <!-- We check the latestStateTasks below as offline workflows won't have a latestStateTasks property -->
@@ -197,15 +197,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 <script>
 import { mapState } from 'vuex'
 import { mdiFilter } from '@mdi/js'
+import uniq from 'lodash/uniq'
 import subscriptionComponentMixin from '@/mixins/subscriptionComponent'
-import JobState from '@/model/JobState.model'
 import TaskState from '@/model/TaskState.model'
 import SubscriptionQuery from '@/model/SubscriptionQuery.model'
 import WorkflowState from '@/model/WorkflowState.model'
 import Job from '@/components/cylc/Job'
 import Tree from '@/components/cylc/tree/Tree'
 import WorkflowIcon from '@/components/cylc/gscan/WorkflowIcon'
-import { createWorkflowNode } from '@/components/cylc/gscan/nodes'
+import { addNodeToTree, createWorkflowNode } from '@/components/cylc/gscan/nodes'
+import { filterHierarchically, WORKFLOW_TYPES_ORDER } from '@/components/cylc/gscan/filters'
 import { GSCAN_DELTAS_SUBSCRIPTION } from '@/graphql/queries'
 
 export default {
@@ -234,14 +235,7 @@ export default {
       /**
        * The filtered workflows. This is the result of applying the filters
        * on the workflows prop.
-       * @type {[
-       *   {
-       *     id: string,
-       *     name: string,
-       *     stateTotals: Map<string, string>,
-       *     status: string
-       *   }
-       * ]}
+       * @type {Array<WorkflowGraphQLData>}
        */
       filteredWorkflows: [],
       /**
@@ -316,6 +310,15 @@ export default {
   },
   computed: {
     ...mapState('workflows', ['workflows']),
+    workflowNodes () {
+      // NOTE: In case we decide to allow the user to switch between hierarchical and flat
+      //       gscan view, then all we need to do is just pass a boolean data-property to
+      //       the `createWorkflowNode` function below. Then reactivity will take care of
+      //       the rest.
+      const reducer = (acc, workflow) => addNodeToTree(createWorkflowNode(workflow, /* hierarchy */true), acc)
+      return Object.values(this.workflows)
+        .reduce(reducer, [])
+    },
     /**
      * Sort workflows by type first, showing running or paused workflows first,
      * then stopped. Within each group, workflows are sorted alphabetically
@@ -323,20 +326,38 @@ export default {
      */
     sortedWorkflows () {
       return [...this.filteredWorkflows].sort((left, right) => {
-        if (left.status !== right.status) {
-          const leftState = WorkflowState.enumValueOf(left.status.toUpperCase())
-          const rightState = WorkflowState.enumValueOf(right.status.toUpperCase())
+        if (left.type !== right.type) {
+          return WORKFLOW_TYPES_ORDER.indexOf(left.type) - WORKFLOW_TYPES_ORDER.indexOf(right.type)
+        }
+        if (left.node.status !== right.node.status) {
+          const leftState = WorkflowState.enumValueOf(left.node.status.toUpperCase())
+          const rightState = WorkflowState.enumValueOf(right.node.status.toUpperCase())
           return leftState.enumOrdinal - rightState.enumOrdinal
         }
-        return left.name
+        return left.node.name
           .localeCompare(
-            right.name,
+            right.node.name,
             undefined,
             { numeric: true, sensitivity: 'base' })
       })
-        .map(workflow => {
-          return createWorkflowNode(workflow, true)
-        })
+    },
+    /**
+     * @return {Array<String>}
+     */
+    workflowStates () {
+      return this.filters[0]
+        .items
+        .filter(item => item.model)
+        .map(item => item.value.name)
+    },
+    /**
+     * @return {Array<String>}
+     */
+    taskStates () {
+      return uniq(this.filters[1]
+        .items
+        .filter(item => item.model)
+        .map(item => item.value.name))
     }
   },
   watch: {
@@ -348,7 +369,7 @@ export default {
       deep: true,
       immediate: false,
       handler: function (newVal) {
-        this.filterWorkflows(Object.values(this.workflows), this.searchWorkflows, newVal)
+        this.filteredWorkflows = this.filterHierarchically(this.workflowNodes, this.searchWorkflows, this.workflowStates, this.taskStates)
       }
     },
     /**
@@ -358,13 +379,13 @@ export default {
     searchWorkflows: {
       immediate: false,
       handler: function (newVal) {
-        this.filterWorkflows(Object.values(this.workflows), newVal, this.filters)
+        this.filteredWorkflows = this.filterHierarchically(this.workflowNodes, newVal, this.workflowStates, this.taskStates)
       }
     },
-    workflows: {
+    workflowNodes: {
       immediate: true,
       handler: function () {
-        this.filterWorkflows(Object.values(this.workflows), this.searchWorkflows, this.filters)
+        this.filteredWorkflows = this.filterHierarchically(this.workflowNodes, this.searchWorkflows, this.workflowStates, this.taskStates)
       }
     }
   },
@@ -375,94 +396,7 @@ export default {
       }
     },
 
-    /**
-     * Filter a list of workflows using a given name (could be a part of
-     * a name) and a given list of filters.
-     *
-     * The list of filters may contain workflow states ("running", "stopped",
-     * "paused"), and/or task states ("running", "waiting", "submit-failed",
-     * etc).
-     *
-     * Does not return any value, but modifies the data variable
-     * filteredWorkflows, used in the template.
-     *
-     * @param {[
-     *  {
-     *   id: string,
-     *   name: string,
-     *   stateTotals: Map<string, string>,
-     *   status: string
-     *  }
-     * ]} workflows list of workflows
-     * @param {string} name
-     * @param {[]} filters
-     */
-    filterWorkflows (workflows, name, filters) {
-      // filter by name
-      this.filteredWorkflows = workflows
-      if (name && name !== '') {
-        this.filteredWorkflows = this.filteredWorkflows
-          .filter(workflow => workflow.name.includes(name))
-      }
-      // get a list of the workflow states we are filtering
-      const workflowStates = filters[0]
-        .items
-        .filter(item => item.model)
-        .map(item => item.value.name)
-      // get a list of the task states we are filtering
-      const taskStates = new Set(filters[1]
-        .items
-        .filter(item => item.model)
-        .map(item => item.value.name))
-      // filter workflows
-      this.filteredWorkflows = this.filteredWorkflows.filter((workflow) => {
-        // workflow states
-        if (!workflowStates.includes(workflow.status)) {
-          return false
-        }
-        // task states
-        if (taskStates.size > 0) {
-          const thisWorkflowStates = workflow.stateTotals ? this.getWorkflowStates(workflow.stateTotals) : []
-          const intersection = thisWorkflowStates.filter(item => taskStates.has(item.text))
-          return intersection.length !== 0
-        }
-        return true
-      })
-    },
-
-    /**
-     * @param stateTotals {Map<string, string>} - object with the keys being states, and values the count
-     * @return {[{
-     *   text: string,
-     *   summary: string
-     * }]}
-     */
-    getWorkflowStates (stateTotals) {
-      if (!stateTotals) {
-        return []
-      }
-      const jobStates = JobState.enumValues.map(jobState => jobState.name)
-      const workflowStates = Object
-        .entries(stateTotals)
-        .filter(stateTotal => {
-          // GraphQL will return all the task states possible in a workflow, but we
-          // only want the states that have an equivalent state for a job. So we filter
-          // out the states that do not exist for jobs, and that have active tasks in
-          // the workflow (no point keeping the empty states, as they are not to be
-          // displayed).
-          return jobStates.includes(stateTotal[0]) && stateTotal[1] > 0
-        })
-      const summary = workflowStates
-        .map(stateTotal => `${stateTotal[0]}, ${stateTotal[1]}`)
-        .join(', ')
-      return workflowStates
-        .map(stateTotal => {
-          return {
-            text: stateTotal[0],
-            summary: `Tasks: ${summary}`
-          }
-        })
-    },
+    filterHierarchically,
 
     /**
      * Return `true` iff all the items have been selected. `false` otherwise.
