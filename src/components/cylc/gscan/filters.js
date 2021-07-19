@@ -123,5 +123,3 @@ export function filterHierarchically (workflows, name, workflowStates, taskState
   }
   return workflows.reduce(filterChildren, [])
 }
-
-export const WORKFLOW_TYPES_ORDER = ['workflow-name-part', 'workflow']

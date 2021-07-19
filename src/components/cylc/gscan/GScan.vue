@@ -102,13 +102,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
       </div>
       <!-- data -->
       <div
-        v-if="!isLoading && sortedWorkflows && sortedWorkflows.length > 0"
+        v-if="!isLoading && filteredWorkflows && filteredWorkflows.length > 0"
         class="c-gscan-workflows"
       >
         <tree
           :filterable="false"
           :expand-collapse-toggle="false"
-          :workflows="sortedWorkflows"
+          :workflows="filteredWorkflows"
           class="c-gscan-workflow"
         >
           <template v-slot:node="scope">

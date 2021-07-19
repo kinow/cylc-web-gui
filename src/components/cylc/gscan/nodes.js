@@ -15,6 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { sortedIndexBy } from '@/components/cylc/common/sort'
+import { sortWorkflowNamePartNodeOrWorkflowNode } from '@/components/cylc/gscan/sort'
+
 /**
  * @typedef {Object} WorkflowGScanNode
  * @property {String} id
@@ -37,7 +40,7 @@
  *
  * @private
  * @param {WorkflowGraphQLData} workflow
- * @param {string} part
+ * @param {string|null} part
  * @returns {WorkflowGScanNode}
  */
 function newWorkflowNode (workflow, part) {
@@ -120,6 +123,8 @@ function createWorkflowNode (workflow, hierarchy) {
 /**
  * Add the new hierarchical node to the list of existing nodes.
  *
+ * New nodes are added in order.
+ *
  * @param {WorkflowGScanNode|WorkflowNamePartGScanNode} node
  * @param {Array<WorkflowGScanNode|WorkflowNamePartGScanNode>} nodes
  * @return {Array<WorkflowGScanNode|WorkflowNamePartGScanNode>}
@@ -131,11 +136,20 @@ function addNodeToTree (node, nodes) {
   //       workflow.
   const existingNode = nodes.find((existingNode) => existingNode.id === node.id)
   if (!existingNode) {
-    nodes.push(node)
+    // Here we calculate what is the index for this element. If we decide to have ASC and DESC,
+    // then we just need to invert the location of the element, something like
+    // `sortedIndex = (array.length - sortedIndex)`.
+    const sortedIndex = sortedIndexBy(
+      nodes,
+      node,
+      (n) => n.name,
+      sortWorkflowNamePartNodeOrWorkflowNode
+    )
+    nodes.splice(sortedIndex, 0, node)
   } else {
     if (node.children) {
       for (const child of node.children) {
-        // Recursion. Do note that we are changing the `nodes` to the children of the existing node.
+        // Recursion. Note that we are changing the `nodes` to the children of the existing node.
         addNodeToTree(child, existingNode.children)
       }
     }
