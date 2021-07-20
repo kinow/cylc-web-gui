@@ -81,7 +81,7 @@ export function sortedIndexBy (array, value, iteratee, comparator) {
   // If given a function, use it. Otherwise, simply use identity function.
   const iterateeFunction = iteratee || ((value) => value)
   // If given a function, use it. Otherwise, simply use locale sort with numeric enabled
-  const comparatorFunction = comparator || ((leftObject, leftValue, rightObject, rightValue) => DEFAULT_COMPARATOR(leftValue, rightValue) > 0)
+  const comparatorFunction = comparator || ((leftObject, leftValue, rightObject, rightValue) => DEFAULT_COMPARATOR(leftValue, rightValue))
   let low = 0
   let high = array.length
 
@@ -91,7 +91,7 @@ export function sortedIndexBy (array, value, iteratee, comparator) {
     const mid = Math.floor((low + high) / 2)
     const midValue = iterateeFunction(array[mid])
     const higher = comparatorFunction(value, newValue, array[mid], midValue)
-    if (higher) {
+    if (higher > 0) {
       low = mid + 1
     } else {
       high = mid

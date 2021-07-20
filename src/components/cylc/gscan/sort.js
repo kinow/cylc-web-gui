@@ -40,7 +40,7 @@ export const WORKFLOW_TYPES_ORDER = ['workflow-name-part', 'workflow']
  * @returns {boolean|number}
  */
 export function sortWorkflowNamePartNodeOrWorkflowNode (leftObject, leftValue, rightObject, rightValue) {
-  if (leftObject.node.type !== rightObject.node.type) {
+  if (leftObject.type !== rightObject.type) {
     return WORKFLOW_TYPES_ORDER.indexOf(leftObject.node.type) - WORKFLOW_TYPES_ORDER.indexOf(rightObject.node.type)
   }
   if (leftObject.node.status !== rightObject.node.status) {
@@ -49,14 +49,14 @@ export function sortWorkflowNamePartNodeOrWorkflowNode (leftObject, leftValue, r
     // FIXME: waiting for https://github.com/cylc/cylc-ui/pull/703
     //        which fixes another issue in GScan... Note to self,
     //        look at the DIFF in GitHub when resolving conflicts!
-    if (!leftState || !leftState.enumOrdinal) {
+    if (!leftState || leftState.enumOrdinal === undefined) {
       return 1
     }
-    if (!rightState || !rightState.enumOrdinal) {
+    if (!rightState || rightState.enumOrdinal === undefined) {
       return -1
     }
     return leftState.enumOrdinal - rightState.enumOrdinal
   }
   // name
-  return DEFAULT_COMPARATOR(leftValue, rightValue) > 0
+  return DEFAULT_COMPARATOR(leftValue, rightValue)
 }

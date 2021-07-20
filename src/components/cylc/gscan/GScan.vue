@@ -206,7 +206,7 @@ import Job from '@/components/cylc/Job'
 import Tree from '@/components/cylc/tree/Tree'
 import WorkflowIcon from '@/components/cylc/gscan/WorkflowIcon'
 import { addNodeToTree, createWorkflowNode } from '@/components/cylc/gscan/nodes'
-import { filterHierarchically, WORKFLOW_TYPES_ORDER } from '@/components/cylc/gscan/filters'
+import { filterHierarchically } from '@/components/cylc/gscan/filters'
 import { GSCAN_DELTAS_SUBSCRIPTION } from '@/graphql/queries'
 
 export default {
@@ -318,28 +318,6 @@ export default {
       const reducer = (acc, workflow) => addNodeToTree(createWorkflowNode(workflow, /* hierarchy */true), acc)
       return Object.values(this.workflows)
         .reduce(reducer, [])
-    },
-    /**
-     * Sort workflows by type first, showing running or paused workflows first,
-     * then stopped. Within each group, workflows are sorted alphabetically
-     * (natural sort).
-     */
-    sortedWorkflows () {
-      return [...this.filteredWorkflows].sort((left, right) => {
-        if (left.type !== right.type) {
-          return WORKFLOW_TYPES_ORDER.indexOf(left.type) - WORKFLOW_TYPES_ORDER.indexOf(right.type)
-        }
-        if (left.node.status !== right.node.status) {
-          const leftState = WorkflowState.enumValueOf(left.node.status.toUpperCase())
-          const rightState = WorkflowState.enumValueOf(right.node.status.toUpperCase())
-          return leftState.enumOrdinal - rightState.enumOrdinal
-        }
-        return left.node.name
-          .localeCompare(
-            right.node.name,
-            undefined,
-            { numeric: true, sensitivity: 'base' })
-      })
     },
     /**
      * @return {Array<String>}

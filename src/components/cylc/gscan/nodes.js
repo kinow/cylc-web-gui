@@ -61,7 +61,7 @@ function newWorkflowNode (workflow, part) {
  */
 function newWorkflowPartNode (id, part) {
   return {
-    id: id,
+    id: `workflow-name-part-${id}`,
     name: part,
     type: 'workflow-name-part',
     node: {
@@ -130,10 +130,10 @@ function createWorkflowNode (workflow, hierarchy) {
  * @return {Array<WorkflowGScanNode|WorkflowNamePartGScanNode>}
  */
 function addNodeToTree (node, nodes) {
-  // N.B.: We must compare nodes by ID, not by part-name, since we can have
-  //       research/nwp/run1 workflow, and research workflow; in this case
-  //       we do not want to confuse the research part-name with the research
-  //       workflow.
+  // N.B.: We must compare nodes by ID, not only by part-name,
+  //       since we can have research/nwp/run1 workflow, and research workflow;
+  //       in this case we do not want to confuse the research part-name with
+  //       the research workflow.
   const existingNode = nodes.find((existingNode) => existingNode.id === node.id)
   if (!existingNode) {
     // Here we calculate what is the index for this element. If we decide to have ASC and DESC,

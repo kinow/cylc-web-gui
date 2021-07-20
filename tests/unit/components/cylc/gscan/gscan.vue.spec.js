@@ -26,6 +26,7 @@ import WorkflowState from '@/model/WorkflowState.model'
 import TaskState from '@/model/TaskState.model'
 import GScan from '@/components/cylc/gscan/GScan'
 import TreeItem from '@/components/cylc/tree/TreeItem'
+import { createWorkflowNode } from '@/components/cylc/gscan/nodes'
 
 global.requestAnimationFrame = cb => cb()
 
@@ -98,6 +99,23 @@ describe('GScan component', () => {
     expect(wrapper.vm.workflows[0].name).to.equal('five')
     expect(wrapper.find('div')).to.not.equal(null)
     expect(wrapper.html()).to.contain('five')
+  })
+  describe('Nodes', () => {
+    it('should create nodes and workflow name part nodes', () => {
+      const workflow = {
+        id: 'user|a/b/c',
+        name: 'a/b/c',
+        status: WorkflowState.PAUSED.name,
+        stateTotals: {
+          [TaskState.FAILED.name]: 1
+        }
+      }
+      const nodeHierarchy = createWorkflowNode(workflow, true)
+      expect(nodeHierarchy.name).to.equal('a')
+      const node = createWorkflowNode(workflow, false)
+      expect(node.name).to.equal(null)
+      expect(node.id).to.equal('user|a/b/c')
+    })
   })
   describe('Sorting', () => {
     const createWorkflows = (namesAndStatuses) => {
@@ -194,12 +212,24 @@ describe('GScan component', () => {
             { name: 'l', status: WorkflowState.PAUSED }
           ]),
           expected: ['b', 'k', 'a', 'e', 'f', 'l', 'h', 'j', 'c', 'd', 'i', 'g']
+        },
+        // sorting by type too
+        {
+          workflows: createWorkflows([
+            { name: 'a', status: WorkflowState.RUNNING },
+            { name: 'a/b', status: WorkflowState.RUNNING }
+          ]),
+          expected: ['b', 'a']
         }
       ]
       tests.forEach(test => {
         store.commit('workflows/SET_WORKFLOWS', test.workflows)
         const wrapper = mountFunction()
+        // We will have all TreeItem elements, workflow-name-part's, and workflow's.
         const workflowsElements = wrapper.findAllComponents(TreeItem)
+          .filter((treeItem) => {
+            return treeItem.vm.node.type === 'workflow'
+          })
         expect(workflowsElements.length).to.equal(test.expected.length)
         for (let i = 0; i < test.expected.length; i++) {
           expect(test.expected[i]).to.equal(workflowsElements.at(i).element.textContent)
@@ -210,7 +240,7 @@ describe('GScan component', () => {
   describe('Filters', () => {
     const workflows = [
       {
-        id: '1',
+        id: 'user|1',
         name: 'new zealand',
         status: WorkflowState.PAUSED.name,
         stateTotals: {
@@ -218,12 +248,30 @@ describe('GScan component', () => {
         }
       },
       {
-        id: '2',
+        id: 'user|2',
         name: 'zeeland',
         status: WorkflowState.RUNNING.name,
         stateTotals: {
           [TaskState.RUNNING.name]: 1
         }
+      },
+      {
+        id: 'user|research/test/a/run1',
+        name: 'research/test/a/run1',
+        status: WorkflowState.PAUSED.name,
+        stateTotals: {}
+      },
+      {
+        id: 'user|research/test/b/run1',
+        name: 'research/test/b/run1',
+        status: WorkflowState.PAUSED.name,
+        stateTotals: {}
+      },
+      {
+        id: 'user|research',
+        name: 'research',
+        status: WorkflowState.STOPPED.name,
+        stateTotals: {}
       }
     ]
     const initialWorkflowStates = WorkflowState.enumValues.map(state => {
@@ -240,6 +288,22 @@ describe('GScan component', () => {
         model: false
       }
     })
+    /**
+     * Helper function to retrieve the workflows in a nested hierarchy.
+     *
+     * @param {Array<WorkflowGScanNode|WorkflowNamePartGScanNode>} hierarchicalWorkflows
+     * @returns {Array<WorkflowGScanNode|WorkflowNamePartGScanNode>}
+     */
+    const getWorkflows = (hierarchicalWorkflows) => {
+      const reducer = (result, workflowNode) => {
+        if (workflowNode.type === 'workflow-name-part') {
+          return workflowNode.children.reduce(reducer, result)
+        }
+        result.push(workflowNode)
+        return result
+      }
+      return hierarchicalWorkflows.reduce(reducer, [])
+    }
     // utility function to create the list of filters, used by tests below
     const createStatesFilters = (workflowStates, workflowTaskStates) => {
       return [
@@ -269,25 +333,29 @@ describe('GScan component', () => {
         .map(filterItem => filterItem.model)
       expect(taskStateFiltersOn.some(model => model)).to.equal(false)
       // we will have the two items being displayed too
-      expect(wrapper.vm.filteredWorkflows.length).to.equal(2)
+      const filtered = getWorkflows(wrapper.vm.filteredWorkflows)
+      expect(filtered.length).to.equal(5)
     })
     it('should not filter by name, nor by tasks state by default, but should include all workflow states', () => {
       store.commit('workflows/SET_WORKFLOWS', workflows)
       const wrapper = mountFunction({})
-      wrapper.vm.filterWorkflows(
-        wrapper.vm.workflows,
+      wrapper.vm.filteredWorkflows = wrapper.vm.filterHierarchically(
+        wrapper.vm.workflowNodes,
         wrapper.vm.searchWorkflows,
-        wrapper.vm.filters
+        wrapper.vm.workflowStates,
+        wrapper.vm.taskStates
       )
       // we will have the two items being displayed too
-      expect(wrapper.vm.filteredWorkflows.length).to.equal(2)
+      const filtered = getWorkflows(wrapper.vm.filteredWorkflows)
+      const raw = getWorkflows(wrapper.vm.workflowNodes)
+      expect(filtered.length).to.equal(raw.length)
     })
     describe('Filter by workflow name', () => {
       it('should filter by name', () => {
         const tests = [
           {
             searchWorkflow: '',
-            expected: 2
+            expected: 5
           },
           {
             searchWorkflow: 'new',
@@ -305,9 +373,16 @@ describe('GScan component', () => {
         tests.forEach(test => {
           store.commit('workflows/SET_WORKFLOWS', workflows)
           const wrapper = mountFunction({})
-          expect(wrapper.vm.filteredWorkflows.length).to.equal(2)
-          wrapper.vm.filterWorkflows(wrapper.vm.workflows, test.searchWorkflow, wrapper.vm.filters)
-          expect(wrapper.vm.filteredWorkflows.length).to.equal(test.expected)
+          let filtered = getWorkflows(wrapper.vm.filteredWorkflows)
+          const raw = getWorkflows(wrapper.vm.workflowNodes)
+          expect(filtered.length).to.equal(raw.length)
+          wrapper.vm.filteredWorkflows = wrapper.vm.filterHierarchically(
+            wrapper.vm.workflowNodes,
+            test.searchWorkflow,
+            wrapper.vm.workflowStates,
+            wrapper.vm.taskStates)
+          filtered = getWorkflows(wrapper.vm.filteredWorkflows)
+          expect(filtered.length).to.equal(test.expected)
         })
       })
     })
@@ -317,12 +392,12 @@ describe('GScan component', () => {
           // all states enabled
           {
             workflowStates: WorkflowState.enumValues,
-            expected: 2
+            expected: 5
           },
           // enable only the ones we have in our test data set
           {
             workflowStates: [WorkflowState.RUNNING, WorkflowState.PAUSED],
-            expected: 2
+            expected: 4
           },
           // enable just one of the values we have in our test data set
           {
@@ -346,8 +421,19 @@ describe('GScan component', () => {
           store.commit('workflows/SET_WORKFLOWS', workflows)
           const wrapper = mountFunction({})
           const filters = createStatesFilters(workflowStates, initialWorkflowTaskStates)
-          wrapper.vm.filterWorkflows(wrapper.vm.workflows, '', filters)
-          expect(wrapper.vm.filteredWorkflows.length).to.equal(test.expected)
+          wrapper.vm.filteredWorkflows = wrapper.vm.filterHierarchically(
+            wrapper.vm.workflowNodes,
+            '',
+            filters[0]
+              .items
+              .filter(item => item.model)
+              .map(item => item.value.name),
+            filters[1]
+              .items
+              .filter(item => item.model)
+              .map(item => item.value.name))
+          const filtered = getWorkflows(wrapper.vm.filteredWorkflows)
+          expect(filtered.length).to.equal(test.expected)
         })
       })
     })
@@ -372,7 +458,7 @@ describe('GScan component', () => {
           // un-checking means every task state enabled
           {
             workflowTaskStates: [],
-            expected: 2
+            expected: 5
           }
         ]
         tests.forEach(test => {
@@ -386,8 +472,19 @@ describe('GScan component', () => {
           store.commit('workflows/SET_WORKFLOWS', workflows)
           const wrapper = mountFunction({})
           const filters = createStatesFilters(initialWorkflowStates, workflowTaskStates)
-          wrapper.vm.filterWorkflows(wrapper.vm.workflows, '', filters)
-          expect(wrapper.vm.filteredWorkflows.length).to.equal(test.expected)
+          wrapper.vm.filteredWorkflows = wrapper.vm.filterHierarchically(
+            wrapper.vm.workflowNodes,
+            '',
+            filters[0]
+              .items
+              .filter(item => item.model)
+              .map(item => item.value.name),
+            filters[1]
+              .items
+              .filter(item => item.model)
+              .map(item => item.value.name))
+          const filtered = getWorkflows(wrapper.vm.filteredWorkflows)
+          expect(filtered.length).to.equal(test.expected)
         })
       })
     })
