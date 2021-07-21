@@ -23,7 +23,7 @@ import JobState from '@/model/JobState.model'
  * @returns {boolean}
  */
 export function filterByName (workflow, name) {
-  return workflow.node.name.includes(name)
+  return workflow.node.name.toLowerCase().includes(name.toLowerCase())
 }
 
 /**

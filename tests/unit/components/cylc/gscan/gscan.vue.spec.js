@@ -362,6 +362,14 @@ describe('GScan component', () => {
             expected: 1
           },
           {
+            searchWorkflow: 'NEW',
+            expected: 1
+          },
+          {
+            searchWorkflow: 'neW',
+            expected: 1
+          },
+          {
             searchWorkflow: 'land',
             expected: 2
           },
