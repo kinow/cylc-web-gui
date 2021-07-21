@@ -41,7 +41,7 @@ export const WORKFLOW_TYPES_ORDER = ['workflow-name-part', 'workflow']
  */
 export function sortWorkflowNamePartNodeOrWorkflowNode (leftObject, leftValue, rightObject, rightValue) {
   if (leftObject.type !== rightObject.type) {
-    return WORKFLOW_TYPES_ORDER.indexOf(leftObject.node.type) - WORKFLOW_TYPES_ORDER.indexOf(rightObject.node.type)
+    return WORKFLOW_TYPES_ORDER.indexOf(leftObject.type) - WORKFLOW_TYPES_ORDER.indexOf(rightObject.type)
   }
   if (leftObject.node.status !== rightObject.node.status) {
     const leftState = WorkflowState.enumValueOf(leftObject.node.status.toUpperCase())

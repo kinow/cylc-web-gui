@@ -220,6 +220,13 @@ describe('GScan component', () => {
             { name: 'a/b', status: WorkflowState.RUNNING }
           ]),
           expected: ['b', 'a']
+        },
+        {
+          workflows: createWorkflows([
+            { name: 'a/b', status: WorkflowState.RUNNING },
+            { name: 'a', status: WorkflowState.RUNNING }
+          ]),
+          expected: ['b', 'a']
         }
       ]
       tests.forEach(test => {
