@@ -15,14 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+@import '~vuetify/src/styles/styles';
+
 .c-gscan {
   .v-skeleton-loader > div:first-child {
     background: inherit;
   }
   .c-gscan-workflows {
     .c-gscan-workflow {
-      padding: 0 !important;
-      margin: 0 !important;
       a.c-workflow-stopped {
         opacity: 0.5;
       }
@@ -34,6 +34,19 @@
       .c-gscan-workflow-states {
         span.empty-state {
           opacity: 0.2;
+        }
+      }
+
+      .treeitem {
+        .node {
+          display: flex;
+          align-items: center;
+
+          .v-list-item {
+            &:hover {
+              background-color: map-get($grey, 'lighten-2');
+            }
+          }
         }
       }
     }

@@ -19,33 +19,6 @@ import TaskOutput from '@/model/TaskOutput.model'
 import Vue from 'vue'
 
 /**
- * A GraphQLData object represents an object from a GraphQL response as-is.
- * It is wrapped within a Tree node (i.e. a tree-node has a node), for
- * when components need the raw object data from fetched with a query
- * (e.g. the state of a task).
- *
- * The properties of this object vary depending on the query parameters,
- * and the GraphQL schema. Use GraphiQL to confirm the data if necessary.
- *
- * @typedef {Object} GraphQLData
- * @property {string} id - node ID
- */
-
-/**
- * @typedef {GraphQLData} WorkflowGraphQLData
- * @property {string} name
- * @property {string} status
- * @property {string} owner
- * @property {string} host
- * @property {string} port
- * @property {Object} stateTotals
- * @property {Array<string>} latestStateTasks
- * @property {?Array<GraphQLData>} cyclePoints
- * @property {?Array<GraphQLData>} familyProxies
- * @property {?Array<GraphQLData>} taskProxies
- */
-
-/**
  * A node of the tree, with the GraphQL data objects organized
  * hierarchically.
  *

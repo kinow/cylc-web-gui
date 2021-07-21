@@ -14,11 +14,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-import { extractGroupState } from '@/utils/tasks'
-import { mergeWith } from 'lodash'
-import { createFamilyProxyNode, getCyclePointId } from '@/components/cylc/tree/nodes'
 import Vue from 'vue'
+import { mergeWith } from 'lodash'
+import { extractGroupState } from '@/utils/tasks'
 import { mergeWithCustomizer } from '@/components/cylc/common/merge'
+import { sortedIndexBy } from '@/components/cylc/common/sort'
+import { sortTaskProxyOrFamilyProxy } from '@/components/cylc/tree/sort'
+import { createFamilyProxyNode, getCyclePointId } from '@/components/cylc/tree/nodes'
 
 export const FAMILY_ROOT = 'root'
 
@@ -59,116 +61,6 @@ function computeCyclePointsStates (cyclePointNodes) {
     // not have the .state property. So we need to ask Vue to make it reactive.
     Vue.set(cyclePointNode.node, 'state', cyclePointState)
   }
-}
-
-/**
- * The default comparator used to compare strings for cycle points, family proxies names,
- * task proxies names, and jobs.
- *
- * @param left {string}
- * @param right {string}
- * @returns {number}
- * @constructor
- */
-const DEFAULT_COMPARATOR = (left, right) => {
-  return left.toLowerCase()
-    .localeCompare(
-      right.toLowerCase(),
-      undefined,
-      {
-        numeric: true,
-        sensitivity: 'base'
-      }
-    )
-}
-
-/**
- * Declare function used in sortedIndexBy as a comparator.
- *
- * @private
- * @callback SortedIndexByComparator
- * @param {object} leftObject - left parameter object
- * @param {string} leftValue - left parameter value
- * @param {object} rightObject - right parameter object
- * @param {string} rightValue - right parameter value
- * @returns {boolean} - true if leftValue is higher than rightValue
- */
-
-/**
- * @private
- * @typedef {SortedIndexByComparator} SortTaskProxyOrFamilyProxyComparator
- * @param {TaskProxyNode|FamilyProxyNode} leftObject
- * @param {string} leftValue
- * @param {TaskProxyNode|FamilyProxyNode} rightObject
- * @param {string} rightValue
- * @returns {boolean}
- */
-function sortTaskProxyOrFamilyProxy (leftObject, leftValue, rightObject, rightValue) {
-  // sort cycle point children (family-proxies, and task-proxies)
-  // first we sort by type ascending, so 'family-proxy' types come before 'task-proxy'
-  // then we sort by node name ascending, so 'bar' comes before 'foo'
-  // node type
-  if (leftObject.type < rightObject.type) {
-    return -1
-  }
-  if (leftObject.type > rightObject.type) {
-    return 1
-  }
-  // name
-  return DEFAULT_COMPARATOR(leftValue, rightValue) > 0
-}
-
-/**
- * Declare function used in sortedIndexBy for creating the iteratee.
- *
- * @callback SortedIndexByIteratee
- * @param {Object} value - any object
- * @returns {string}
- */
-
-/**
- * Given a list of elements, and a value to be added to the list, we
- * perform a simple binary search of the list to determine the next
- * index where the value can be inserted, so that the list remains
- * sorted.
- *
- * This function uses localeCompare, which will respect the numeric
- * collation.
- *
- * This is a simplified version of lodash's function with the same
- * name, but that respects natural order for numbers, i.e. [1, 2, 10].
- * Not [1, 10, 2].
- *
- * @private
- * @param array {Array<object>} - list of string values, or of objects with string values
- * @param value {object} - a value to be inserted in the list, or an object wrapping the value (see iteratee)
- * @param iteratee {SortedIndexByIteratee=} - an optional function used to return the value of the element of the list}
- * @param comparator {SortedIndexByComparator=} - function used to compare the newValue with otherValues in the list
- */
-function sortedIndexBy (array, value, iteratee, comparator) {
-  if (array.length === 0) {
-    return 0
-  }
-  // If given a function, use it. Otherwise, simply use identity function.
-  const iterateeFunction = iteratee || ((value) => value)
-  // If given a function, use it. Otherwise, simply use locale sort with numeric enabled
-  const comparatorFunction = comparator || ((leftObject, leftValue, rightObject, rightValue) => DEFAULT_COMPARATOR(leftValue, rightValue) > 0)
-  let low = 0
-  let high = array.length
-
-  const newValue = iterateeFunction(value)
-
-  while (low < high) {
-    const mid = Math.floor((low + high) / 2)
-    const midValue = iterateeFunction(array[mid])
-    const higher = comparatorFunction(value, newValue, array[mid], midValue)
-    if (higher) {
-      low = mid + 1
-    } else {
-      high = mid
-    }
-  }
-  return high
 }
 
 /**
